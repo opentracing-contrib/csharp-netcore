@@ -1,0 +1,18 @@
+language: csharp
+
+matrix:
+  include:
+    - os: linux
+      dist: trusty
+      sudo: required
+      mono: none
+      dotnet: 2.1.4
+
+env:
+  global:
+    - DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+    - DOTNET_CLI_TELEMETRY_OPTOUT: 1
+
+script:
+  - dotnet build -c Release
+  - dotnet test test/OpenTracing.Contrib.Tests/OpenTracing.Contrib.Tests.csproj -c Release --no-build

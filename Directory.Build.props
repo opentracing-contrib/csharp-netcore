@@ -1,0 +1,32 @@
+<Project>
+  <PropertyGroup>
+    <VersionPrefix>0.1.0</VersionPrefix>
+    <Authors>Christian Weiss and contributors</Authors>
+    <!-- <PackageIconUrl>https://avatars0.githubusercontent.com/u/15482765</PackageIconUrl> -->
+    <PackageProjectUrl>https://github.com/opentracing-contrib/csharp-aspnetcore</PackageProjectUrl>
+    <PackageLicenseUrl>https://raw.githubusercontent.com/opentracing-contrib/csharp-aspnetcore/master/LICENSE</PackageLicenseUrl>
+    <PackageReleaseNotes>https://github.com/opentracing-contrib/csharp-aspnetcore/releases/tag/$(VersionPrefix)</PackageReleaseNotes>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>git://github.com/opentracing-contrib/csharp-aspnetcore</RepositoryUrl>
+
+    <LangVersion>latest</LangVersion>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+
+    <!-- SourceLink support -->
+    <DebugType>portable</DebugType>
+    <SourceLinkNoAutoLF>true</SourceLinkNoAutoLF>
+
+    <!-- There's currently a pack-warning because of the long "Description" tag. However, "Summary" is no longer supported.
+    This will be fixed in an upcoming version of nuget. The workaround for now is to just disable analysis.
+    https://github.com/NuGet/Home/issues/4587#issuecomment-288913324 -->
+    <NoPackageAnalysis>true</NoPackageAnalysis>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="SourceLink.Create.GitHub" Version="2.8.0" PrivateAssets="All" />
+    <DotNetCliToolReference Include="dotnet-sourcelink" Version="2.8.0" />
+    <DotNetCliToolReference Include="dotnet-sourcelink-git" Version="2.8.0" />
+  </ItemGroup>
+</Project>
