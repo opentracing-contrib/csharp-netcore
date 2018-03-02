@@ -21,9 +21,8 @@ namespace Samples.FrontendWeb
                 // Enables OpenTracing instrumentation for ASP.NET Core, HttpClient, EF Core
                 .UseOpenTracing()
 
-                // Register and start Zipkin
+                // Register Zipkin (see Startup.Configure for how it is started)
                 .ConfigureServices(services => services.AddSingleton<ZipkinManager>())
-                .Configure(app => app.ApplicationServices.GetRequiredService<ZipkinManager>().Start())
 
                 .Build();
         }
