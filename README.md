@@ -10,9 +10,9 @@ The project currently only supports apps targeting `netcoreapp2.0` (.NET Core 2.
 
 ## Usage in ASP.NET Core web apps
 
-#### 1. Add the NuGet package `OpenTracing.Contrib.AspNetCore` to your web project.
+##### 1. Add the NuGet package `OpenTracing.Contrib.AspNetCore` to your web project.
 
-#### 2. Add `.UseOpenTracing()` to the initialization code of your `IWebHostBuilder`. Typically, this is done in the `BuildWebHost` method of your `Program.cs`:
+##### 2. Add `.UseOpenTracing()` to the initialization code of your `IWebHostBuilder`. Typically, this is done in the `BuildWebHost` method of your `Program.cs`:
 
 ```csharp
 public static IWebHost BuildWebHost(string[] args)
@@ -34,9 +34,9 @@ It's also possible to instrument non-web based .NET Core apps like console apps,
 
 Have a look at the `TrafficGenerator` sample for an example.
 
-#### 1. Add the NuGet package `OpenTracing.Contrib.NetCore` to your web project.
+##### 1. Add the NuGet package `OpenTracing.Contrib.NetCore` to your web project.
 
-#### 2. Add the OpenTracing services to your `IServiceCollection` via `services.AddOpenTracing()`.
+##### 2. Add the OpenTracing services to your `IServiceCollection` via `services.AddOpenTracing()`.
 
 How you do this depends on how you've setup the `Microsoft.Extensions.DependencyInjection` system in your app.
 
@@ -44,7 +44,7 @@ How you do this depends on how you've setup the `Microsoft.Extensions.Dependency
 services.AddOpenTracing();
 ```
 
-#### 3. Aquire an instance of `IOpenTracingInstrumentor` and `Start()` the instrumentation.
+##### 3. Aquire an instance of `IOpenTracingInstrumentor` and `Start()` the instrumentation.
 
 After you've set up your DI container, you have to manually start the instrumentation. Note that this is not necessary in ASP.NET core apps.
 
