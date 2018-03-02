@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Net.Http;
 
-namespace OpenTracing.Contrib.Core.Configuration
+namespace OpenTracing.Contrib.NetCore.Configuration
 {
     /// <summary>
     /// Configuration options for the instrumentation of outgoing HTTP calls.

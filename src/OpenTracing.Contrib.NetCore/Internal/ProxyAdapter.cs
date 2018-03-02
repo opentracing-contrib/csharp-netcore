@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.Extensions.DiagnosticAdapter.Internal;
 
-namespace OpenTracing.Contrib.Core.Internal
+namespace OpenTracing.Contrib.NetCore.Internal
 {
     public class ProxyAdapter
     {

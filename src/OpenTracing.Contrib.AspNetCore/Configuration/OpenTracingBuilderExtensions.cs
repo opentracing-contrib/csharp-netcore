@@ -4,7 +4,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using OpenTracing.Contrib.AspNetCore;
 using OpenTracing.Contrib.AspNetCore.Interceptors.Mvc;
 using OpenTracing.Contrib.AspNetCore.Interceptors.RequestIn;
-using OpenTracing.Contrib.Core;
+using OpenTracing.Contrib.NetCore;
 
 namespace Microsoft.Extensions.DependencyInjection
 {

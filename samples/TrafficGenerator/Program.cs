@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using OpenTracing.Contrib.Core;
+using OpenTracing.Contrib.NetCore;
 using Shared;
 
 namespace TrafficGenerator

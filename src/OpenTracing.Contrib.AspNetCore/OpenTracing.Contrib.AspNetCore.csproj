@@ -14,7 +14,7 @@ Instrumented componentes: Outgoing HTTP calls, Entity Framework Core commands, i
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\OpenTracing.Contrib.Core\OpenTracing.Contrib.Core.csproj" />
+    <ProjectReference Include="..\OpenTracing.Contrib.NetCore\OpenTracing.Contrib.NetCore.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,8 +1,8 @@
 using System;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using OpenTracing;
-using OpenTracing.Contrib.Core;
-using OpenTracing.Contrib.Core.Configuration;
+using OpenTracing.Contrib.NetCore;
+using OpenTracing.Contrib.NetCore.Configuration;
 using OpenTracing.Util;
 
 namespace Microsoft.Extensions.DependencyInjection

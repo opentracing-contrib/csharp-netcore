@@ -1,9 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
 using OpenTracing.Tag;
 
-namespace OpenTracing.Contrib.Core
+namespace OpenTracing.Contrib.NetCore
 {
     public static class SpanExtensions
     {

@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DiagnosticAdapter;
 using Microsoft.Extensions.Logging;
-using OpenTracing.Contrib.Core;
-using OpenTracing.Contrib.Core.Internal;
+using OpenTracing.Contrib.NetCore;
+using OpenTracing.Contrib.NetCore.Internal;
 using OpenTracing.Tag;
 
 namespace OpenTracing.Contrib.AspNetCore.Interceptors.Mvc

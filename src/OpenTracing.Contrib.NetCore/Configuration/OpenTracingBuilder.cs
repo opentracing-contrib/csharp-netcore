@@ -1,7 +1,7 @@
 using System;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace OpenTracing.Contrib.Core.Configuration
+namespace OpenTracing.Contrib.NetCore.Configuration
 {
     internal class OpenTracingBuilder : IOpenTracingBuilder
     {

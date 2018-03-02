@@ -1,7 +1,7 @@
 using System;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using OpenTracing.Contrib.Core;
+using OpenTracing.Contrib.NetCore;
 
 namespace OpenTracing.Contrib.AspNetCore
 {

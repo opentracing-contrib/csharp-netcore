@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.Extensions.DiagnosticAdapter;
 using Microsoft.Extensions.Logging;
-using OpenTracing.Contrib.Core;
+using OpenTracing.Contrib.NetCore;
 using OpenTracing.Propagation;
 using OpenTracing.Tag;
 

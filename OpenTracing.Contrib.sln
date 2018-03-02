@@ -22,7 +22,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenTracing.Tracer.Zipkin",
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenTracing.Contrib.Tests", "test\OpenTracing.Contrib.Tests\OpenTracing.Contrib.Tests.csproj", "{29D93B24-CEF9-48BA-9DE5-961E1C0D52E3}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenTracing.Contrib.Core", "src\OpenTracing.Contrib.Core\OpenTracing.Contrib.Core.csproj", "{10729E17-3C79-477B-BBEB-B727D7B5B60B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenTracing.Contrib.NetCore", "src\OpenTracing.Contrib.NetCore\OpenTracing.Contrib.NetCore.csproj", "{10729E17-3C79-477B-BBEB-B727D7B5B60B}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TrafficGenerator", "samples\TrafficGenerator\TrafficGenerator.csproj", "{F82DCB26-7497-43A5-9F46-4B58DAB28C25}"
 EndProject

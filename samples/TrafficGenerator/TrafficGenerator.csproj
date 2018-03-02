@@ -17,7 +17,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Shared\Shared.csproj" />
-    <ProjectReference Include="..\..\src\OpenTracing.Contrib.Core\OpenTracing.Contrib.Core.csproj" />
+    <ProjectReference Include="..\..\src\OpenTracing.Contrib.NetCore\OpenTracing.Contrib.NetCore.csproj" />
     <ProjectReference Include="..\..\src\OpenTracing.Tracer.Zipkin\OpenTracing.Tracer.Zipkin.csproj" />
   </ItemGroup>
 

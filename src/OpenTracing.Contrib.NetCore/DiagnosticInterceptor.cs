@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using Microsoft.Extensions.Logging;
 
-namespace OpenTracing.Contrib.Core
+namespace OpenTracing.Contrib.NetCore
 {
     /// <summary>
     /// Base class for instrumentation code that uses <see cref="DiagnosticListener"/>.

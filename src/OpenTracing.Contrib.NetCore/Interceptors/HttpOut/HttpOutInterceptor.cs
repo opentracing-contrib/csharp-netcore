@@ -5,11 +5,11 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.DiagnosticAdapter;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using OpenTracing.Contrib.Core.Configuration;
+using OpenTracing.Contrib.NetCore.Configuration;
 using OpenTracing.Propagation;
 using OpenTracing.Tag;
 
-namespace OpenTracing.Contrib.Core.Interceptors.HttpOut
+namespace OpenTracing.Contrib.NetCore.Interceptors.HttpOut
 {
     internal sealed class HttpOutInterceptor : DiagnosticInterceptor
     {

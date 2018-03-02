@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace OpenTracing.Contrib.Core
+namespace OpenTracing.Contrib.NetCore
 {
     public class OpenTracingInstrumentor : IOpenTracingInstrumentor
     {

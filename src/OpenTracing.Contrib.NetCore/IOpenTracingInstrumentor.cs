@@ -1,6 +1,6 @@
 using System;
 
-namespace OpenTracing.Contrib.Core
+namespace OpenTracing.Contrib.NetCore
 {
     /// <summary>
     /// Responsible for starting and stopping all registered OpenTracing instrumentation components.
