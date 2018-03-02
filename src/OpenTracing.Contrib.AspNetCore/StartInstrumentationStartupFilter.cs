@@ -8,7 +8,7 @@ namespace OpenTracing.Contrib.AspNetCore
     /// <summary>
     /// Automatically starts the instrumentation on application startup.
     /// </summary>
-    internal class StartInstrumentationStartupFilter : IStartupFilter
+    public class StartInstrumentationStartupFilter : IStartupFilter
     {
         private readonly IOpenTracingInstrumentor _instrumentor;
 

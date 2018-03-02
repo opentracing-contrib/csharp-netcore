@@ -1,6 +1,6 @@
 namespace OpenTracing.Contrib.NetCore.Interceptors.EntityFrameworkCore
 {
-    internal interface IDbCommand
+    public interface IDbCommand
     {
         string CommandText { get; }
     }
