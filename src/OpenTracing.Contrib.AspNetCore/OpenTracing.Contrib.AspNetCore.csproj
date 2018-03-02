@@ -1,9 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netcoreapp2.0</TargetFrameworks>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
     <Description>Adds OpenTracing instrumentation for ASP.NET Core apps.
-Instrumented componentes: Outgoing HTTP calls, Entity Framework Core commands, incoming ASP.NET Core requests, MVC actions &amp; views.</Description>
+Instrumented components: Outgoing HTTP calls, Entity Framework Core commands, incoming ASP.NET Core requests, MVC actions &amp; views.</Description>
     <PackageTags>opentracing;distributed-tracing;tracing;netcore;aspnetcore</PackageTags>
   </PropertyGroup>
 

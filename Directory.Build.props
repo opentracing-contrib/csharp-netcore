@@ -1,11 +1,11 @@
 <Project>
   <PropertyGroup>
     <VersionPrefix>0.1.0</VersionPrefix>
-    <Authors>Christian Weiss and contributors</Authors>
+    <Authors>Christian Weiss</Authors>
     <!-- <PackageIconUrl>https://avatars0.githubusercontent.com/u/15482765</PackageIconUrl> -->
     <PackageProjectUrl>https://github.com/opentracing-contrib/csharp-aspnetcore</PackageProjectUrl>
     <PackageLicenseUrl>https://raw.githubusercontent.com/opentracing-contrib/csharp-aspnetcore/master/LICENSE</PackageLicenseUrl>
-    <PackageReleaseNotes>https://github.com/opentracing-contrib/csharp-aspnetcore/releases/tag/$(VersionPrefix)</PackageReleaseNotes>
+    <PackageReleaseNotes>https://github.com/opentracing-contrib/csharp-aspnetcore/releases</PackageReleaseNotes>
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>git://github.com/opentracing-contrib/csharp-aspnetcore</RepositoryUrl>
 
