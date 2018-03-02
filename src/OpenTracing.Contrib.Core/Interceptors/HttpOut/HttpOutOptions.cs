@@ -5,13 +5,25 @@ using System.Net.Http;
 namespace OpenTracing.Contrib.Core.Configuration
 {
     /// <summary>
-    /// Configuration for the instrumentation of <see cref="HttpClient"/> calls.
+    /// Configuration options for the instrumentation of outgoing HTTP calls.
     /// </summary>
     public class HttpOutOptions
     {
         public const string PropertyIgnore = "ot-ignore";
 
+        public const string DefaultComponent = "HttpOut";
+
+        private string _componentName;
         private Func<HttpRequestMessage, string> _operationNameResolver;
+
+        /// <summary>
+        /// Allows changing the "component" tag of created spans.
+        /// </summary>
+        public string ComponentName
+        {
+            get => _componentName;
+            set => _componentName = value ?? throw new ArgumentNullException(nameof(ComponentName));
+        }
 
         /// <summary>
         /// A list of delegates that define whether or not a given request should be ignored.
@@ -34,6 +46,10 @@ namespace OpenTracing.Contrib.Core.Configuration
 
         public HttpOutOptions()
         {
+            // Default settings
+
+            ComponentName = DefaultComponent;
+
             ShouldIgnore.Add((request) =>
             {
                 return request.Properties.ContainsKey(PropertyIgnore);
@@ -41,7 +57,7 @@ namespace OpenTracing.Contrib.Core.Configuration
 
             OperationNameResolver = (request) =>
             {
-                return request.Method.Method + "_" + request.RequestUri.AbsolutePath.TrimStart('/');
+                return "HTTP " + request.Method.Method;
             };
         }
     }

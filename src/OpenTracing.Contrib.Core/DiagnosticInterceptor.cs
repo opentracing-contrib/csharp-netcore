@@ -5,10 +5,14 @@ using Microsoft.Extensions.Logging;
 
 namespace OpenTracing.Contrib.Core
 {
-    public abstract class DiagnosticInterceptor : IDiagnosticInterceptor
+    /// <summary>
+    /// Base class for instrumentation code that uses <see cref="DiagnosticListener"/>.
+    /// </summary>
+    public abstract class DiagnosticInterceptor : IDisposable
     {
-        private IDisposable _subscription;
         private readonly bool _isTraceLoggingEnabled;
+
+        private IDisposable _subscription;
 
         protected ILogger Logger { get; }
         protected ITracer Tracer { get; }
@@ -27,21 +31,37 @@ namespace OpenTracing.Contrib.Core
             _isTraceLoggingEnabled = Logger.IsEnabled(LogLevel.Trace);
         }
 
+        /// <summary>
+        /// Starts listening for <see cref="DiagnosticListener"/> events.
+        /// </summary>
         public void Start()
         {
+            if (_subscription != null)
+            {
+                // Already started.
+                return;
+            }
+
             _subscription = DiagnosticListener.AllListeners.Subscribe(listener =>
             {
                 listener.SubscribeWithAdapter(this, IsEnabled);
             });
         }
 
+        /// <summary>
+        /// Stops listening for <see cref="DiagnosticListener"/> events.
+        /// </summary>
         public void Dispose()
         {
             _subscription?.Dispose();
+            _subscription = null;
         }
 
         protected abstract bool IsEnabled(string listenerName);
 
+        /// <summary>
+        /// Executes the given <paramref name="action"/> in a fail-safe way by swallowing (and logging) any exceptions thrown.
+        /// </summary>
         protected void Execute(Action action, [CallerMemberName] string callerMemberName = null)
         {
             try
@@ -56,7 +76,7 @@ namespace OpenTracing.Contrib.Core
             }
             catch (Exception ex)
             {
-                Logger.LogError(ex, "{Event} failed", callerMemberName);
+                Logger.LogWarning(ex, "{Event}-Exception", callerMemberName);
             }
         }
 
@@ -67,7 +87,7 @@ namespace OpenTracing.Contrib.Core
                 var scope = Tracer.ScopeManager.Active;
                 if (scope == null)
                 {
-                    Logger.LogError("Scope not found");
+                    Logger.LogWarning("Scope not found");
                     return;
                 }
 
@@ -75,7 +95,7 @@ namespace OpenTracing.Contrib.Core
 
                 if (Tracer.ScopeManager.Active == scope)
                 {
-                    Logger.LogError("Disposing scope failed");
+                    Logger.LogWarning("Disposing scope failed");
                 }
             });
         }

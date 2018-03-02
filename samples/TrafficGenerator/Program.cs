@@ -20,7 +20,7 @@ namespace TrafficGenerator
         static void StartTasks(IServiceProvider serviceProvider)
         {
             serviceProvider.GetRequiredService<ZipkinManager>().Start();
-            serviceProvider.GetRequiredService<IInstrumentor>().Start();
+            serviceProvider.GetRequiredService<IOpenTracingInstrumentor>().Start();
         }
 
         static async Task Main(string[] args)
@@ -79,6 +79,6 @@ namespace TrafficGenerator
 
         }
 
-        
+
     }
 }

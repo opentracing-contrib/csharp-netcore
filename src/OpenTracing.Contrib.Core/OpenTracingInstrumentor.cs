@@ -3,14 +3,14 @@ using System.Collections.Generic;
 
 namespace OpenTracing.Contrib.Core
 {
-    public class Instrumentor : IInstrumentor
+    public class OpenTracingInstrumentor : IOpenTracingInstrumentor
     {
-        private readonly IEnumerable<IDiagnosticInterceptor> _interceptors;
+        private readonly IEnumerable<DiagnosticInterceptor> _interceptors;
 
         private bool _started;
         private bool _disposed;
 
-        public Instrumentor(IEnumerable<IDiagnosticInterceptor> interceptors)
+        public OpenTracingInstrumentor(IEnumerable<DiagnosticInterceptor> interceptors)
         {
             _interceptors = interceptors ?? throw new ArgumentNullException(nameof(interceptors));
         }
@@ -33,12 +33,9 @@ namespace OpenTracing.Contrib.Core
             if (_disposed)
                 return;
 
-            if (_interceptors != null)
+            foreach (var interceptor in _interceptors)
             {
-                foreach (var interceptor in _interceptors)
-                {
-                    interceptor.Dispose();
-                }
+                interceptor.Dispose();
             }
 
             _disposed = true;

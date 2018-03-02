@@ -7,16 +7,17 @@ using OpenTracing.Propagation;
 namespace OpenTracing.Contrib.Core.Interceptors.HttpOut
 {
     /// <summary>
-    /// A <see cref="ITextMap"/> which allows <see cref="HttpHeaders"/> implementations to be used as carrier objects.
+    /// A <see cref="ITextMap"/> which allows <see cref="HttpHeaders"/> implementations to be used as carrier objects
+    /// for <see cref="ITracer.Inject"/>.
     /// </summary>
     /// <remarks>
     /// <see cref="HttpHeaders"/> is a multi-value dictionary. Since most other platforms represent http headers as regular
     /// dictionaries, this carrier represents it as a regular dictionary to tracer implementations.</remarks>
-    internal sealed class HttpHeadersCarrier : ITextMap
+    internal sealed class HttpHeadersInjectAdapter : ITextMap
     {
         private readonly HttpHeaders _headers;
 
-        public HttpHeadersCarrier(HttpHeaders headers)
+        public HttpHeadersInjectAdapter(HttpHeaders headers)
         {
             if (headers == null)
                 throw new ArgumentNullException(nameof(headers));
@@ -36,11 +37,7 @@ namespace OpenTracing.Contrib.Core.Interceptors.HttpOut
 
         public IEnumerator<KeyValuePair<string, string>> GetEnumerator()
         {
-            foreach (var kvp in _headers)
-            {
-                // TODO Is string.Join() the correct behavior?
-                yield return new KeyValuePair<string, string>(kvp.Key, string.Join(",", kvp.Value));
-            }
+            throw new NotSupportedException("This class should only be used with ITracer.Inject");
         }
 
         IEnumerator IEnumerable.GetEnumerator()

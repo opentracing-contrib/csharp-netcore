@@ -9,26 +9,34 @@ namespace Microsoft.Extensions.DependencyInjection
 {
     public static class ServiceCollectionExtensions
     {
-        public static IOpenTracingBuilder AddOpenTracing(this IServiceCollection services)
+        /// <summary>
+        /// Adds instrumentation for Entity Framework Core and outgoing HTTP calls.
+        /// </summary>
+        public static IServiceCollection AddOpenTracing(this IServiceCollection services, Action<IOpenTracingBuilder> builder = null)
         {
             if (services == null)
                 throw new ArgumentNullException(nameof(services));
 
-            var builder = services.AddOpenTracingCore()
+            var builderInstance = services.AddOpenTracingCoreServices()
                 .AddEntityFrameworkCore()
-                .AddHttpClient();
+                .AddHttpOut();
 
-            return builder;
+            builder?.Invoke(builderInstance);
+
+            return services;
         }
 
-        public static IOpenTracingBuilder AddOpenTracingCore(this IServiceCollection services)
+        /// <summary>
+        /// Adds the core services required for OpenTracing without any actual instrumentations.
+        /// </summary>
+        public static IOpenTracingBuilder AddOpenTracingCoreServices(this IServiceCollection services)
         {
             if (services == null)
                 throw new ArgumentNullException(nameof(services));
 
             services.TryAddSingleton<ITracer>(GlobalTracer.Instance);
 
-            services.TryAddSingleton<IInstrumentor, Instrumentor>();
+            services.TryAddSingleton<IOpenTracingInstrumentor, OpenTracingInstrumentor>();
 
             var builder = new OpenTracingBuilder(services);
 

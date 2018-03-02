@@ -10,9 +10,9 @@ namespace OpenTracing.Contrib.AspNetCore
     /// </summary>
     internal class StartInstrumentationStartupFilter : IStartupFilter
     {
-        private readonly IInstrumentor _instrumentor;
+        private readonly IOpenTracingInstrumentor _instrumentor;
 
-        public StartInstrumentationStartupFilter(IInstrumentor instrumentor)
+        public StartInstrumentationStartupFilter(IOpenTracingInstrumentor instrumentor)
         {
             _instrumentor = instrumentor ?? throw new ArgumentNullException(nameof(instrumentor));
         }

@@ -109,13 +109,13 @@ namespace OpenTracing.Contrib.Tests.HttpOut
             var span = finishedSpans[0];
             Assert.Empty(span.GeneratedErrors);
             Assert.Empty(span.LogEntries);
-            Assert.Equal("GET_api/values", span.OperationName);
+            Assert.Equal("HTTP GET", span.OperationName);
             Assert.Equal(0, span.ParentId);
             Assert.Empty(span.References);
 
             Assert.Equal(7, span.Tags.Count);
             Assert.Equal(Tags.SpanKindClient, span.Tags[Tags.SpanKind.Key]);
-            Assert.Equal("HttpClient", span.Tags[Tags.Component.Key]);
+            Assert.Equal("HttpOut", span.Tags[Tags.Component.Key]);
             Assert.Equal("GET", span.Tags[Tags.HttpMethod.Key]);
             Assert.Equal("http://www.example.com/api/values", span.Tags[Tags.HttpUrl.Key]);
             Assert.Equal("www.example.com", span.Tags[Tags.PeerHostname.Key]);

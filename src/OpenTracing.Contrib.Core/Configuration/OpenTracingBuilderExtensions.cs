@@ -1,4 +1,5 @@
 using System;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using OpenTracing.Contrib.Core;
 using OpenTracing.Contrib.Core.Configuration;
 using OpenTracing.Contrib.Core.Interceptors.EntityFrameworkCore;
@@ -9,36 +10,36 @@ namespace Microsoft.Extensions.DependencyInjection
     public static class OpenTracingBuilderExtensions
     {
         /// <summary>
-        /// Traces Entity Framework Core commands.
+        /// Adds instrumentation for Entity Framework Core.
         /// </summary>
         public static IOpenTracingBuilder AddEntityFrameworkCore(this IOpenTracingBuilder builder)
         {
             if (builder == null)
                 throw new ArgumentNullException(nameof(builder));
 
-            builder.Services.AddSingleton<IDiagnosticInterceptor, EntityFrameworkCoreInterceptor>();
+            builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<DiagnosticInterceptor, EntityFrameworkCoreInterceptor>());
 
             return builder;
         }
 
         /// <summary>
-        /// Traces <see cref="System.Net.Http.HttpClient"/> calls.
+        /// Adds instrumentation for outgoing HTTP calls.
         /// </summary>
-        public static IOpenTracingBuilder AddHttpClient(this IOpenTracingBuilder builder, Action<HttpOutOptions> options = null)
+        public static IOpenTracingBuilder AddHttpOut(this IOpenTracingBuilder builder, Action<HttpOutOptions> options = null)
         {
             if (builder == null)
                 throw new ArgumentNullException(nameof(builder));
 
-            builder.Services.AddSingleton<IDiagnosticInterceptor, HttpOutInterceptor>();
+            builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<DiagnosticInterceptor, HttpOutInterceptor>());
 
-            return ConfigureHttpClient(builder, options);
+            return ConfigureHttpOut(builder, options);
         }
 
         /// <summary>
-        /// Configuration for the instrumentation of <see cref="System.Net.Http.HttpClient"/> calls.
+        /// Configuration options for the instrumentation of outgoing HTTP calls.
         /// </summary>
-        /// <seealso cref="AddHttpClient(IOpenTracingBuilder, Action{HttpOutOptions})"/>
-        public static IOpenTracingBuilder ConfigureHttpClient(this IOpenTracingBuilder builder, Action<HttpOutOptions> options)
+        /// <seealso cref="AddHttpOut(IOpenTracingBuilder, Action{HttpOutOptions})"/>
+        public static IOpenTracingBuilder ConfigureHttpOut(this IOpenTracingBuilder builder, Action<HttpOutOptions> options)
         {
             if (builder == null)
                 throw new ArgumentNullException(nameof(builder));

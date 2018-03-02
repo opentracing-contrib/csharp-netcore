@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DiagnosticAdapter;
@@ -18,8 +19,6 @@ namespace OpenTracing.Contrib.Core.Interceptors.HttpOut
         public const string EventRequest = ActivityName + ".Start";
         public const string EventResponse = ActivityName + ".Stop";
         public const string EventException = "System.Net.Http.Exception";
-
-        public const string Component = "HttpClient";
 
         private readonly HttpOutOptions _options;
 
@@ -46,7 +45,7 @@ namespace OpenTracing.Contrib.Core.Interceptors.HttpOut
         [DiagnosticName(ActivityName)]
         public void OnActivity()
         {
-            // HACK: There Must be a method for the main activity name otherwise no activities are logged.
+            // HACK: There must be a method for the main activity name otherwise no activities are logged.
             // So this is just a no-op.
         }
 
@@ -65,7 +64,7 @@ namespace OpenTracing.Contrib.Core.Interceptors.HttpOut
 
                 IScope scope = Tracer.BuildSpan(operationName)
                     .WithTag(Tags.SpanKind.Key, Tags.SpanKindClient)
-                    .WithTag(Tags.Component.Key, Component)
+                    .WithTag(Tags.Component.Key, _options.ComponentName)
                     .WithTag(Tags.HttpMethod.Key, request.Method.ToString())
                     .WithTag(Tags.HttpUrl.Key, request.RequestUri.ToString())
                     .WithTag(Tags.PeerHostname.Key, request.RequestUri.Host)
@@ -74,7 +73,7 @@ namespace OpenTracing.Contrib.Core.Interceptors.HttpOut
 
                 _options.OnRequest?.Invoke(scope.Span, request);
 
-                Tracer.Inject(scope.Span.Context, BuiltinFormats.HttpHeaders, new HttpHeadersCarrier(request.Headers));
+                Tracer.Inject(scope.Span.Context, BuiltinFormats.HttpHeaders, new HttpHeadersInjectAdapter(request.Headers));
             });
         }
 

@@ -6,16 +6,17 @@ namespace Microsoft.AspNetCore.Hosting
     public static class WebHostBuilderExtensions
     {
         /// <summary>
-        /// Adds OpenTracing instrumentation that can be sent to any compatible tracer.
+        /// Adds instrumentation for ASP.NET Core, Entity Framework Core and outgoing HTTP calls.
         /// </summary>
         public static IWebHostBuilder UseOpenTracing(this IWebHostBuilder webHostBuilder, Action<IOpenTracingBuilder> configure = null)
         {
             webHostBuilder.ConfigureServices(services =>
             {
-                var otBuilder = services.AddOpenTracing()
-                    .AddAspNetCore();
-
-                configure?.Invoke(otBuilder);
+                services.AddOpenTracing(builder =>
+                {
+                    builder.AddAspNetCore();
+                    configure?.Invoke(builder);
+                });
             });
 
             return webHostBuilder;
