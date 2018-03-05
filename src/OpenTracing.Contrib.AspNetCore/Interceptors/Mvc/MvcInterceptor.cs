@@ -24,6 +24,8 @@ namespace OpenTracing.Contrib.AspNetCore.Interceptors.Mvc
 
         private readonly ProxyAdapter _proxyAdapter;
 
+        protected override string ListenerName => "Microsoft.AspNetCore";
+
         public MvcInterceptor(ILoggerFactory loggerFactory, ITracer tracer)
             : base(loggerFactory, tracer)
         {
@@ -31,20 +33,6 @@ namespace OpenTracing.Contrib.AspNetCore.Interceptors.Mvc
 
             _proxyAdapter.Register("Microsoft.AspNetCore.Mvc.Controllers.ControllerActionDescriptor");
             _proxyAdapter.Register("Microsoft.AspNetCore.Mvc.Abstractions.ActionDescriptor");
-        }
-
-        protected override bool IsEnabled(string listenerName)
-        {
-            if (listenerName == EventBeforeAction)
-                return true;
-            if (listenerName == EventAfterAction)
-                return true;
-            if (listenerName == EventBeforeActionResult)
-                return true;
-            if (listenerName == EventAfterActionResult)
-                return true;
-
-            return false;
         }
 
         [DiagnosticName(EventBeforeAction)]

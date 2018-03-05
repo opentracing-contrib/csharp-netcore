@@ -6,16 +6,23 @@ using Microsoft.Extensions.Logging;
 namespace OpenTracing.Contrib.NetCore
 {
     /// <summary>
-    /// Base class for instrumentation code that uses <see cref="DiagnosticListener"/>.
+    /// Base class for instrumentation code that uses <see cref="DiagnosticListener"/> subscriptions.
     /// </summary>
     public abstract class DiagnosticInterceptor : IDisposable
     {
         private readonly bool _isTraceLoggingEnabled;
+        private object _lock = new object();
 
-        private IDisposable _subscription;
+        private IDisposable _allListenersSubscription;
+        private IDisposable _listenerSubscription;
 
         protected ILogger Logger { get; }
         protected ITracer Tracer { get; }
+
+        /// <summary>
+        /// The name of the <see cref="DiagnosticListener"/> that should be instrumented.
+        /// </summary>
+        protected abstract string ListenerName { get; }
 
         protected DiagnosticInterceptor(ILoggerFactory loggerFactory, ITracer tracer)
         {
@@ -36,16 +43,28 @@ namespace OpenTracing.Contrib.NetCore
         /// </summary>
         public void Start()
         {
-            if (_subscription != null)
+            if (_allListenersSubscription == null)
             {
-                // Already started.
-                return;
-            }
+                Logger.LogTrace("Starting AllListeners subscription");
 
-            _subscription = DiagnosticListener.AllListeners.Subscribe(listener =>
+                _allListenersSubscription = DiagnosticListener.AllListeners.Subscribe(listener =>
+                {
+                    if (listener.Name == ListenerName)
+                    {
+                        lock (_lock)
+                        {
+                            Logger.LogTrace("Starting named listener subscription");
+
+                            _listenerSubscription?.Dispose();
+                            _listenerSubscription = listener.SubscribeWithAdapter(this, IsEnabled);
+                        }
+                    }
+                });
+            }
+            else
             {
-                listener.SubscribeWithAdapter(this, IsEnabled);
-            });
+                Logger.LogWarning("Start() was called multiple times. Call was ignored.");
+            }
         }
 
         /// <summary>
@@ -53,11 +72,34 @@ namespace OpenTracing.Contrib.NetCore
         /// </summary>
         public void Dispose()
         {
-            _subscription?.Dispose();
-            _subscription = null;
+            if (_allListenersSubscription != null)
+            {
+                Logger.LogTrace("Disposing AllListeners subscription");
+
+                _allListenersSubscription.Dispose();
+                _allListenersSubscription = null;
+
+                lock (_lock)
+                {
+                    if (_listenerSubscription != null)
+                    {
+                        Logger.LogTrace("Disposing named listener subscription");
+
+                        _listenerSubscription.Dispose();
+                        _listenerSubscription = null;
+                    }
+                }
+            }
+            else
+            {
+                Logger.LogTrace("Dispose() called but there was no active subscription.");
+            }
         }
 
-        protected abstract bool IsEnabled(string listenerName);
+        protected virtual bool IsEnabled(string diagnosticName, object arg1, object arg2)
+        {
+            return true;
+        }
 
         /// <summary>
         /// Executes the given <paramref name="action"/> in a fail-safe way by swallowing (and logging) any exceptions thrown.

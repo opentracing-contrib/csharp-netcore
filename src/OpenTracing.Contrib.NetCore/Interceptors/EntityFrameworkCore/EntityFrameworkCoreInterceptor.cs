@@ -17,21 +17,12 @@ namespace OpenTracing.Contrib.NetCore.Interceptors.EntityFrameworkCore
         private const string TagMethod = "ef.method";
         private const string TagIsAsync = "ef.async";
 
+        // https://github.com/aspnet/EntityFrameworkCore/blob/dev/src/EFCore/DbLoggerCategory.cs
+        protected override string ListenerName => "Microsoft.EntityFrameworkCore";
+
         public EntityFrameworkCoreInterceptor(ILoggerFactory loggerFactory, ITracer tracer)
             : base(loggerFactory, tracer)
         {
-        }
-
-        protected override bool IsEnabled(string listenerName)
-        {
-            if (listenerName == EventBeforeExecuteCommand)
-                return true;
-            if (listenerName == EventAfterExecuteCommand)
-                return true;
-            if (listenerName == EventCommandExecutionError)
-                return true;
-
-            return false;
         }
 
         /// <summary>

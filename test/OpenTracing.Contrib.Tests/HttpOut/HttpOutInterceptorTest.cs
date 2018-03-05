@@ -4,13 +4,14 @@ using System.Net.Http;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using OpenTracing.Contrib.NetCore.Configuration;
 using OpenTracing.Contrib.NetCore.Interceptors.HttpOut;
 using OpenTracing.Mock;
 using OpenTracing.Tag;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace OpenTracing.Contrib.Tests.HttpOut
 {
@@ -43,11 +44,13 @@ namespace OpenTracing.Contrib.Tests.HttpOut
             }
         }
 
-        public HttpOutInterceptorTest()
+        public HttpOutInterceptorTest(ITestOutputHelper output)
         {
+            ILoggerFactory loggerFactory = new LoggerFactory().AddXunit(output);
+
             _tracer = new MockTracer();
             _options = new HttpOutOptions();
-            _interceptor = new HttpOutInterceptor(new NullLoggerFactory(), _tracer, Options.Create(_options));
+            _interceptor = new HttpOutInterceptor(loggerFactory, _tracer, Options.Create(_options));
 
             // Inner handler for mocking the result
             _httpHandler = new MockHttpMessageHandler();
@@ -134,6 +137,19 @@ namespace OpenTracing.Contrib.Tests.HttpOut
         }
 
         [Fact]
+        public async Task Does_not_inject_trace_headers_if_disabled_in_options()
+        {
+            _options.InjectEnabled = req => !req.Properties.ContainsKey("ignore");
+
+            var request = new HttpRequestMessage(HttpMethod.Get, new Uri("http://www.example.com/api/values"));
+            request.Properties["ignore"] = true;
+
+            await _httpClient.SendAsync(request);
+
+            Assert.False(request.Headers.Contains("traceid"));
+        }
+
+        [Fact]
         public async Task Ignores_requests_with_Ignore_property()
         {
             var request = new HttpRequestMessage(HttpMethod.Get, new Uri("http://www.example.com/api/values"));
@@ -147,7 +163,7 @@ namespace OpenTracing.Contrib.Tests.HttpOut
         [Fact]
         public async Task Ignores_requests_with_custom_rule()
         {
-            _options.ShouldIgnore.Add(req => req.Properties.ContainsKey("foo"));
+            _options.IgnorePatterns.Add(req => req.Properties.ContainsKey("foo"));
 
             var request = new HttpRequestMessage(HttpMethod.Get, new Uri("http://www.example.com/api/values"));
             request.Properties["foo"] = 1;

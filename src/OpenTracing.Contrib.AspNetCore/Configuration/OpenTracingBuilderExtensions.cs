@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using OpenTracing.Contrib.AspNetCore;
+using OpenTracing.Contrib.AspNetCore.Configuration;
 using OpenTracing.Contrib.AspNetCore.Interceptors.Mvc;
 using OpenTracing.Contrib.AspNetCore.Interceptors.RequestIn;
 using OpenTracing.Contrib.NetCore;
@@ -22,6 +23,22 @@ namespace Microsoft.Extensions.DependencyInjection
 
             builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<DiagnosticInterceptor, MvcInterceptor>());
             builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<DiagnosticInterceptor, RequestInterceptor>());
+
+            return builder;
+        }
+
+        /// <summary>
+        /// Configuration options for the instrumentation of incoming HTTP requests.
+        /// </summary>
+        public static IOpenTracingBuilder ConfigureRequestIn(this IOpenTracingBuilder builder, Action<RequestInOptions> options)
+        {
+            if (builder == null)
+                throw new ArgumentNullException(nameof(builder));
+
+            if (options != null)
+            {
+                builder.Services.Configure(options);
+            }
 
             return builder;
         }

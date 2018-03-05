@@ -27,8 +27,15 @@ namespace OpenTracing.Contrib.NetCore.Configuration
 
         /// <summary>
         /// A list of delegates that define whether or not a given request should be ignored.
+        /// <para/>
+        /// If any delegate in the list returns <c>true</c>, the request will be ignored.
         /// </summary>
-        public List<Func<HttpRequestMessage, bool>> ShouldIgnore { get; } = new List<Func<HttpRequestMessage, bool>>();
+        public List<Func<HttpRequestMessage, bool>> IgnorePatterns { get; } = new List<Func<HttpRequestMessage, bool>>();
+
+        /// <summary>
+        /// A delegates that defines on what requests tracing headers are propagated.
+        /// </summary>
+        public Func<HttpRequestMessage, bool> InjectEnabled { get; set; }
 
         /// <summary>
         /// A delegate that returns the OpenTracing "operation name" for the given request.
@@ -50,7 +57,7 @@ namespace OpenTracing.Contrib.NetCore.Configuration
 
             ComponentName = DefaultComponent;
 
-            ShouldIgnore.Add((request) =>
+            IgnorePatterns.Add((request) =>
             {
                 return request.Properties.ContainsKey(PropertyIgnore);
             });

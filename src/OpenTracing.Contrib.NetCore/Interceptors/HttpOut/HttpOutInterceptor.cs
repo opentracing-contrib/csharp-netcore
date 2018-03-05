@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DiagnosticAdapter;
@@ -11,16 +10,19 @@ using OpenTracing.Tag;
 
 namespace OpenTracing.Contrib.NetCore.Interceptors.HttpOut
 {
+    /// <summary>
+    /// Instruments outgoing HTTP calls that use <see cref="HttpClientHandler"/>.
+    /// <para/>See https://github.com/dotnet/corefx/blob/master/src/System.Net.Http/src/System/Net/Http/DiagnosticsHandler.cs
+    /// <para/>and https://github.com/dotnet/corefx/blob/master/src/System.Net.Http/src/System/Net/Http/DiagnosticsHandlerLoggingStrings.cs
+    /// </summary>
+    /// 
     internal sealed class HttpOutInterceptor : DiagnosticInterceptor
     {
-        // Diagnostic names:
-        // https://github.com/dotnet/corefx/blob/master/src/System.Net.Http/src/System/Net/Http/DiagnosticsHandlerLoggingStrings.cs
-        public const string ActivityName = "System.Net.Http.HttpRequestOut";
-        public const string EventRequest = ActivityName + ".Start";
-        public const string EventResponse = ActivityName + ".Stop";
-        public const string EventException = "System.Net.Http.Exception";
+        private const string PropertiesKey = "ot-Span";
 
         private readonly HttpOutOptions _options;
+
+        protected override string ListenerName => "HttpHandlerDiagnosticListener";
 
         public HttpOutInterceptor(ILoggerFactory loggerFactory, ITracer tracer, IOptions<HttpOutOptions> options)
             : base(loggerFactory, tracer)
@@ -28,90 +30,87 @@ namespace OpenTracing.Contrib.NetCore.Interceptors.HttpOut
             _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
         }
 
-        protected override bool IsEnabled(string listenerName)
-        {
-            if (listenerName == ActivityName)
-                return true;
-            if (listenerName == EventRequest)
-                return true;
-            if (listenerName == EventResponse)
-                return true;
-            if (listenerName == EventException)
-                return true;
-
-            return false;
-        }
-
-        [DiagnosticName(ActivityName)]
+        [DiagnosticName("System.Net.Http.HttpRequestOut")]
         public void OnActivity()
         {
             // HACK: There must be a method for the main activity name otherwise no activities are logged.
             // So this is just a no-op.
+            // https://github.com/aspnet/Home/issues/2325
         }
 
-        [DiagnosticName(EventRequest)]
-        public void OnRequest(HttpRequestMessage request)
+        [DiagnosticName("System.Net.Http.HttpRequestOut.Start")]
+        public void OnStart(HttpRequestMessage request)
         {
             Execute(() =>
             {
-                if (ShouldIgnore(request))
+                if (IgnoreRequest(request))
                 {
                     Logger.LogDebug("Ignoring Request {RequestUri}", request.RequestUri);
                     return;
                 }
 
-                string operationName = _options.OperationNameResolver(request);
-
-                IScope scope = Tracer.BuildSpan(operationName)
+                ISpan span = Tracer.BuildSpan(_options.OperationNameResolver(request))
                     .WithTag(Tags.SpanKind.Key, Tags.SpanKindClient)
                     .WithTag(Tags.Component.Key, _options.ComponentName)
                     .WithTag(Tags.HttpMethod.Key, request.Method.ToString())
                     .WithTag(Tags.HttpUrl.Key, request.RequestUri.ToString())
                     .WithTag(Tags.PeerHostname.Key, request.RequestUri.Host)
                     .WithTag(Tags.PeerPort.Key, request.RequestUri.Port)
-                    .StartActive(finishSpanOnDispose: true);
+                    .Start();
 
-                _options.OnRequest?.Invoke(scope.Span, request);
+                _options.OnRequest?.Invoke(span, request);
 
-                Tracer.Inject(scope.Span.Context, BuiltinFormats.HttpHeaders, new HttpHeadersInjectAdapter(request.Headers));
+                if (_options.InjectEnabled?.Invoke(request) ?? true)
+                {
+                    Tracer.Inject(span.Context, BuiltinFormats.HttpHeaders, new HttpHeadersInjectAdapter(request.Headers));
+                }
+
+                // This throws if there's already an item with the same key. We do this for now to get notified of potential bugs.
+                request.Properties.Add(PropertiesKey, span);
             });
         }
 
-        [DiagnosticName(EventException)]
+        [DiagnosticName("System.Net.Http.Exception")]
         public void OnException(HttpRequestMessage request, Exception exception)
         {
             Execute(() =>
             {
-                Tracer.ActiveSpan?.SetException(exception);
+                if (request.Properties.TryGetValue(PropertiesKey, out object objSpan) && objSpan is ISpan span)
+                {
+                    span.SetException(exception);
+                }
             });
         }
 
-        [DiagnosticName(EventResponse)]
-        public void OnResponse(HttpResponseMessage response, TaskStatus requestTaskStatus)
+        [DiagnosticName("System.Net.Http.HttpRequestOut.Stop")]
+        public void OnStop(HttpResponseMessage response, HttpRequestMessage request, TaskStatus requestTaskStatus)
         {
             Execute(() =>
             {
-                IScope scope = Tracer.ScopeManager.Active;
-
-                if (response != null)
+                if (request.Properties.TryGetValue(PropertiesKey, out object objSpan) && objSpan is ISpan span)
                 {
-                    scope?.Span?.SetTag(Tags.HttpStatus.Key, (int)response.StatusCode);
-                }
+                    if (response != null)
+                    {
+                        span.SetTag(Tags.HttpStatus.Key, (int)response.StatusCode);
+                    }
 
-                if (requestTaskStatus == TaskStatus.Canceled || requestTaskStatus == TaskStatus.Faulted)
-                {
-                    scope?.Span?.SetTag(Tags.Error.Key, true);
-                }
+                    if (requestTaskStatus == TaskStatus.Canceled || requestTaskStatus == TaskStatus.Faulted)
+                    {
+                        span.SetTag(Tags.Error.Key, true);
+                    }
 
-                scope?.Dispose();
+                    span.Finish();
+
+                    request.Properties[PropertiesKey] = null;
+                }
             });
         }
 
-        private bool ShouldIgnore(HttpRequestMessage request)
+        private bool IgnoreRequest(HttpRequestMessage request)
         {
-            foreach (Func<HttpRequestMessage, bool> shouldIgnore in _options.ShouldIgnore)
+            foreach (Func<HttpRequestMessage, bool> ignore in _options.IgnorePatterns)
             {
-                if (shouldIgnore(request))
+                if (ignore(request))
                     return true;
             }
 
