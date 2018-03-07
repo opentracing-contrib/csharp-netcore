@@ -44,13 +44,12 @@ How you do this depends on how you've setup the `Microsoft.Extensions.Dependency
 services.AddOpenTracing();
 ```
 
-##### 3. Aquire an instance of `IOpenTracingInstrumentor` and `Start()` the instrumentation.
+##### 3. Make sure `InstrumentationService`, which implements `IHostedService`, is started.
 
-After you've set up your DI container, you have to manually start the instrumentation. Note that this is not necessary in ASP.NET core apps.
+`InstrumentationService` is responsible for starting and stopping the instrumentation. 
+The service implements `IHostedService` so it is automatically started in ASP.NET Core, 
+however if you have your own console host, you manually have to call `StartAsync` and `StopAsync`.
 
-```csharp
-serviceProvider.GetRequiredService<IOpenTracingInstrumentor>().Start();
-```
 
 Note that .NET Core 2.1 will greatly simplify this setup by introducing a `GenericHostBuilder` that works similar to the existing `WebHostBuilder` from ASP.NET Core.
 

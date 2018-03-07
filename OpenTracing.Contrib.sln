@@ -26,6 +26,14 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenTracing.Contrib.NetCore
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TrafficGenerator", "samples\TrafficGenerator\TrafficGenerator.csproj", "{F82DCB26-7497-43A5-9F46-4B58DAB28C25}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{A47B38EB-246E-4CD5-9655-539466C71067}"
+	ProjectSection(SolutionItems) = preProject
+		build-definition.ps1 = build-definition.ps1
+		Directory.Build.props = Directory.Build.props
+		launch-sample.ps1 = launch-sample.ps1
+		README.md = README.md
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
