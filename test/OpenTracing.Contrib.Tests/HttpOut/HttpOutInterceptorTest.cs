@@ -67,8 +67,7 @@ namespace OpenTracing.Contrib.Tests.HttpOut
 
         public void Dispose()
         {
-            // Stops the interceptor
-            _interceptor.Dispose();
+            _interceptor.Stop();
         }
 
         [Fact]

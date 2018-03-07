@@ -6,27 +6,18 @@ using OpenTracing.Propagation;
 
 namespace OpenTracing.Contrib.AspNetCore.Interceptors.RequestIn
 {
-    /// <summary>
-    /// A <see cref="ITextMap"/> which allows <see cref="IHeaderDictionary"/> implementations to be used as carrier objects.
-    /// </summary>
-    /// <remarks>
-    /// <see cref="IHeaderDictionary"/> is a multi-value dictionary. Since most other platforms represent http headers as regular
-    /// dictionaries, this carrier represents it as a regular dictionary to tracer implementations.</remarks>
-    internal sealed class HeaderDictionaryCarrier : ITextMap
+    internal sealed class HeadersExtractAdapter : ITextMap
     {
         private readonly IHeaderDictionary _headers;
 
-        public HeaderDictionaryCarrier(IHeaderDictionary headers)
+        public HeadersExtractAdapter(IHeaderDictionary headers)
         {
-            if (headers == null)
-                throw new ArgumentNullException(nameof(headers));
-
-            _headers = headers;
+            _headers = headers ?? throw new ArgumentNullException(nameof(headers));
         }
 
         public void Set(string key, string value)
         {
-            _headers[key] = value;
+            throw new NotSupportedException("This class should only be used with ITracer.Extract");
         }
 
         public IEnumerator<KeyValuePair<string, string>> GetEnumerator()

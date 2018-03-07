@@ -15,7 +15,6 @@ namespace OpenTracing.Contrib.NetCore.Interceptors.HttpOut
     /// <para/>See https://github.com/dotnet/corefx/blob/master/src/System.Net.Http/src/System/Net/Http/DiagnosticsHandler.cs
     /// <para/>and https://github.com/dotnet/corefx/blob/master/src/System.Net.Http/src/System/Net/Http/DiagnosticsHandlerLoggingStrings.cs
     /// </summary>
-    /// 
     internal sealed class HttpOutInterceptor : DiagnosticInterceptor
     {
         private const string PropertiesKey = "ot-Span";

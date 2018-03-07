@@ -1,5 +1,6 @@
 using System;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Hosting;
 using OpenTracing;
 using OpenTracing.Contrib.NetCore;
 using OpenTracing.Contrib.NetCore.Configuration;
@@ -36,7 +37,7 @@ namespace Microsoft.Extensions.DependencyInjection
 
             services.TryAddSingleton<ITracer>(GlobalTracer.Instance);
 
-            services.TryAddSingleton<IOpenTracingInstrumentor, OpenTracingInstrumentor>();
+            services.TryAddEnumerable(ServiceDescriptor.Singleton<IHostedService, InstrumentationService>());
 
             var builder = new OpenTracingBuilder(services);
 

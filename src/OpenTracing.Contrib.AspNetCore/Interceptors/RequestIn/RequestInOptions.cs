@@ -22,8 +22,15 @@ namespace OpenTracing.Contrib.AspNetCore.Configuration
 
         /// <summary>
         /// A list of delegates that define whether or not a given request should be ignored.
+        /// <para/>
+        /// If any delegate in the list returns <c>true</c>, the request will be ignored.
         /// </summary>
-        public List<Func<HttpContext, bool>> ShouldIgnore { get; } = new List<Func<HttpContext, bool>>();
+        public List<Func<HttpContext, bool>> IgnorePatterns { get; } = new List<Func<HttpContext, bool>>();
+
+        /// <summary>
+        /// A delegates that defines from which requests tracing headers are extracted.
+        /// </summary>
+        public Func<HttpContext, bool> ExtractEnabled { get; set; }
 
         /// <summary>
         /// A delegate that returns the OpenTracing "operation name" for the given request.

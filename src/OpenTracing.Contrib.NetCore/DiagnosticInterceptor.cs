@@ -8,7 +8,7 @@ namespace OpenTracing.Contrib.NetCore
     /// <summary>
     /// Base class for instrumentation code that uses <see cref="DiagnosticListener"/> subscriptions.
     /// </summary>
-    public abstract class DiagnosticInterceptor : IDisposable
+    public abstract class DiagnosticInterceptor
     {
         private readonly bool _isTraceLoggingEnabled;
         private object _lock = new object();
@@ -70,11 +70,11 @@ namespace OpenTracing.Contrib.NetCore
         /// <summary>
         /// Stops listening for <see cref="DiagnosticListener"/> events.
         /// </summary>
-        public void Dispose()
+        public void Stop()
         {
             if (_allListenersSubscription != null)
             {
-                Logger.LogTrace("Disposing AllListeners subscription");
+                Logger.LogTrace("Stopping AllListeners subscription");
 
                 _allListenersSubscription.Dispose();
                 _allListenersSubscription = null;
@@ -83,7 +83,7 @@ namespace OpenTracing.Contrib.NetCore
                 {
                     if (_listenerSubscription != null)
                     {
-                        Logger.LogTrace("Disposing named listener subscription");
+                        Logger.LogTrace("Stopping named listener subscription");
 
                         _listenerSubscription.Dispose();
                         _listenerSubscription = null;
@@ -92,7 +92,7 @@ namespace OpenTracing.Contrib.NetCore
             }
             else
             {
-                Logger.LogTrace("Dispose() called but there was no active subscription.");
+                Logger.LogTrace("Stop() called but there was no active subscription.");
             }
         }
 

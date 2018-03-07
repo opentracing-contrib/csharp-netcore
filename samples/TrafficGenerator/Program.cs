@@ -1,10 +1,11 @@
 ﻿using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using OpenTracing.Contrib.NetCore;
 using Shared;
 
 namespace TrafficGenerator
@@ -14,15 +15,20 @@ namespace TrafficGenerator
         static void ConfigureServices(IServiceCollection services)
         {
             services.AddOpenTracing();
+
+            services.AddSingleton<IHostedService, Worker>();
+
             services.AddSingleton<ZipkinManager>();
         }
 
         static void StartTasks(IServiceProvider serviceProvider)
         {
             serviceProvider.GetRequiredService<ZipkinManager>().Start();
-            serviceProvider.GetRequiredService<IOpenTracingInstrumentor>().Start();
         }
 
+        /// <summary>
+        /// DEMO CODE that simulates ASP.NET Core 2.1's new GenericHost.
+        /// </summary>
         static async Task Main(string[] args)
         {
             // Configuration
@@ -50,22 +56,26 @@ namespace TrafficGenerator
 
             StartTasks(serviceProvider);
 
-            // Start Worker
-
             var logger = serviceProvider.GetRequiredService<ILogger<Program>>();
-            logger.LogInformation("Starting worker");
 
             try
             {
-                // Start Worker
-                var worker = (Worker)ActivatorUtilities.CreateInstance(serviceProvider, typeof(Worker));
-                await worker.StartAsync(CancellationToken.None);
+                var hostedServices = serviceProvider.GetServices<IHostedService>();
+
+                logger.LogInformation("Starting services");
+                foreach (var hostedService in hostedServices)
+                {
+                    await hostedService.StartAsync(CancellationToken.None);
+                }
 
                 // Wait for cancellation
                 Console.ReadLine();
 
-                logger.LogInformation("Closing application");
-                await worker.StopAsync(CancellationToken.None);
+                logger.LogInformation("Stopping services");
+                foreach (var hostedService in hostedServices.Reverse())
+                {
+                    await hostedService.StopAsync(new CancellationTokenSource(TimeSpan.FromSeconds(5)).Token);
+                }
             }
             catch (Exception ex)
             {

@@ -6,23 +6,13 @@ using OpenTracing.Propagation;
 
 namespace OpenTracing.Contrib.NetCore.Interceptors.HttpOut
 {
-    /// <summary>
-    /// A <see cref="ITextMap"/> which allows <see cref="HttpHeaders"/> implementations to be used as carrier objects
-    /// for <see cref="ITracer.Inject"/>.
-    /// </summary>
-    /// <remarks>
-    /// <see cref="HttpHeaders"/> is a multi-value dictionary. Since most other platforms represent http headers as regular
-    /// dictionaries, this carrier represents it as a regular dictionary to tracer implementations.</remarks>
     internal sealed class HttpHeadersInjectAdapter : ITextMap
     {
         private readonly HttpHeaders _headers;
 
         public HttpHeadersInjectAdapter(HttpHeaders headers)
         {
-            if (headers == null)
-                throw new ArgumentNullException(nameof(headers));
-
-            _headers = headers;
+            _headers = headers ?? throw new ArgumentNullException(nameof(headers));
         }
 
         public void Set(string key, string value)

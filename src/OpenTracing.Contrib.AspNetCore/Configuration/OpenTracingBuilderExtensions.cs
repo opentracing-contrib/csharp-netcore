@@ -1,7 +1,5 @@
 ﻿using System;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using OpenTracing.Contrib.AspNetCore;
 using OpenTracing.Contrib.AspNetCore.Configuration;
 using OpenTracing.Contrib.AspNetCore.Interceptors.Mvc;
 using OpenTracing.Contrib.AspNetCore.Interceptors.RequestIn;
@@ -18,8 +16,6 @@ namespace Microsoft.Extensions.DependencyInjection
         {
             if (builder == null)
                 throw new ArgumentNullException(nameof(builder));
-
-            builder.Services.TryAddEnumerable(ServiceDescriptor.Transient<IStartupFilter, StartInstrumentationStartupFilter>());
 
             builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<DiagnosticInterceptor, MvcInterceptor>());
             builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<DiagnosticInterceptor, RequestInterceptor>());
