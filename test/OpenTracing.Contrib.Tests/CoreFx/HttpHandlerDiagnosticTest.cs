@@ -15,9 +15,10 @@ using OpenTracing.Tag;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace OpenTracing.Contrib.Tests.HttpOut
+namespace OpenTracing.Contrib.Tests.CoreFx
 {
-    public class HttpOutInterceptorTest : IDisposable
+    [Collection("DiagnosticSource") /* All DiagnosticSource tests must be in the same collection to ensure they are NOT run in parallel. */]
+    public class HttpHandlerDiagnosticTest : IDisposable
     {
         private readonly MockTracer _tracer;
         private readonly HttpHandlerDiagnosticOptions _options;
@@ -47,7 +48,7 @@ namespace OpenTracing.Contrib.Tests.HttpOut
             }
         }
 
-        public HttpOutInterceptorTest(ITestOutputHelper output)
+        public HttpHandlerDiagnosticTest(ITestOutputHelper output)
         {
             ILoggerFactory loggerFactory = new LoggerFactory().AddXunit(output);
 

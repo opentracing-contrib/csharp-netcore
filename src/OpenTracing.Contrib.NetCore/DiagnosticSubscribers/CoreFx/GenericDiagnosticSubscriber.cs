@@ -4,9 +4,13 @@ using System.Diagnostics;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using OpenTracing.Contrib.NetCore.Configuration;
+using OpenTracing.Tag;
 
 namespace OpenTracing.Contrib.NetCore.DiagnosticSubscribers.CoreFx
 {
+    /// <summary>
+    /// A <see cref="DiagnosticListener"/> subscriber that logs ALL events to <see cref="ITracer.ActiveSpan"/>.
+    /// </summary>
     public sealed class GenericDiagnosticSubscriber : DiagnosticSubscriber
     {
         private readonly GenericDiagnosticOptions _options;
@@ -75,12 +79,46 @@ namespace OpenTracing.Contrib.NetCore.DiagnosticSubscribers.CoreFx
 
                 if (span != null)
                 {
-                    span.Log(_listenerName + ": " + value.Key);
+                    span.Log(GetLogFields(value));
                 }
                 else if (_subscriber.IsLogLevelTraceEnabled)
                 {
                     _subscriber.Logger.LogTrace("No ActiveSpan. Event: {ListenerName}/{Event}", _listenerName, value.Key);
                 }
+            }
+
+            private Dictionary<string, object> GetLogFields(KeyValuePair<string, object> value)
+            {
+                var fields = new Dictionary<string, object>
+                {
+                    { LogFields.Event, value.Key },
+                    { Tags.Component.Key, _listenerName }
+                };
+
+                // TODO improve the hell out of this... :)
+
+                object arg = value.Value;
+
+                if (arg != null)
+                {
+                    Type argType = arg.GetType();
+
+                    if (argType.IsPrimitive)
+                    {
+                        fields.Add("arg", arg);
+                    }
+                    else
+                    {
+                        fields.Add("arg", arg.ToString());
+
+                        if (_subscriber.IsLogLevelTraceEnabled)
+                        {
+                            _subscriber.Logger.LogTrace("Can not extract value for argument type '{Type}'. Using ToString()", argType);
+                        }
+                    }
+                }
+
+                return fields;
             }
         }
     }

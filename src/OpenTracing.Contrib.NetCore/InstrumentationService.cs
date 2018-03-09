@@ -12,9 +12,9 @@ namespace OpenTracing.Contrib.NetCore
     {
         private readonly DiagnosticManager _diagnosticsManager;
 
-        public InstrumentationService(DiagnosticManager diagnosticsManager)
+        public InstrumentationService(DiagnosticManager diagnosticManager)
         {
-            _diagnosticsManager = diagnosticsManager ?? throw new ArgumentNullException(nameof(diagnosticsManager));
+            _diagnosticsManager = diagnosticManager ?? throw new ArgumentNullException(nameof(diagnosticManager));
         }
 
         public Task StartAsync(CancellationToken cancellationToken)

@@ -27,6 +27,10 @@ namespace Microsoft.Extensions.DependencyInjection
                 x.GenericDiagnostic.IgnoreEvent(RequestDiagnosticSubscriber.DiagnosticListenerName, RequestDiagnosticSubscriber.EventOnActivityStart);
                 x.GenericDiagnostic.IgnoreEvent(RequestDiagnosticSubscriber.DiagnosticListenerName, RequestDiagnosticSubscriber.EventOnActivityStop);
                 x.GenericDiagnostic.IgnoreEvent(RequestDiagnosticSubscriber.DiagnosticListenerName, RequestDiagnosticSubscriber.EventOnUnhandledException);
+
+                // Deprecated Hosting events
+                x.GenericDiagnostic.IgnoreEvent(RequestDiagnosticSubscriber.DiagnosticListenerName, "Microsoft.AspNetCore.Hosting.BeginRequest");
+                x.GenericDiagnostic.IgnoreEvent(RequestDiagnosticSubscriber.DiagnosticListenerName, "Microsoft.AspNetCore.Hosting.EndRequest");
             });
 
             return ConfigureAspNetCore(builder, options);
@@ -44,19 +48,6 @@ namespace Microsoft.Extensions.DependencyInjection
             {
                 builder.Services.Configure(options);
             }
-
-            return builder;
-        }
-
-        /// <summary>
-        /// Adds instrumentation for Entity Framework Core.
-        /// </summary>
-        public static IOpenTracingBuilder AddEntityFrameworkCore(this IOpenTracingBuilder builder)
-        {
-            if (builder == null)
-                throw new ArgumentNullException(nameof(builder));
-
-            builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<DiagnosticSubscriber, EFCoreDiagnosticSubscriber>());
 
             return builder;
         }
@@ -93,6 +84,19 @@ namespace Microsoft.Extensions.DependencyInjection
             {
                 builder.Services.Configure(options);
             }
+
+            return builder;
+        }
+
+        /// <summary>
+        /// Adds instrumentation for Entity Framework Core.
+        /// </summary>
+        public static IOpenTracingBuilder AddEntityFrameworkCore(this IOpenTracingBuilder builder)
+        {
+            if (builder == null)
+                throw new ArgumentNullException(nameof(builder));
+
+            builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<DiagnosticSubscriber, EFCoreDiagnosticSubscriber>());
 
             return builder;
         }

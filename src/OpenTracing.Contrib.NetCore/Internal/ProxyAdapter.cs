@@ -6,7 +6,7 @@ using Microsoft.Extensions.DiagnosticAdapter.Internal;
 
 namespace OpenTracing.Contrib.NetCore.Internal
 {
-    public class ProxyAdapter
+    internal class ProxyAdapter
     {
         private static readonly ProxyTypeCache _cache = new ProxyTypeCache();
 

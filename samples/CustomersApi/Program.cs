@@ -19,7 +19,7 @@ namespace Samples.CustomersApi
                 .UseUrls(Constants.CustomersUrl)
                 .ConfigureServices(services =>
                 {
-                    // Enables OpenTracing instrumentation for ASP.NET Core, HttpClient, EF Core
+                    // Enables OpenTracing instrumentation for ASP.NET Core, CoreFx, EF Core
                     services.AddOpenTracing();
 
                     // Register Zipkin (see Startup.Configure for how it is started)
