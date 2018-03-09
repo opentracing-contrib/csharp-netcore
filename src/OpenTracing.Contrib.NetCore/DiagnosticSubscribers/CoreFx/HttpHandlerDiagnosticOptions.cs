@@ -1,13 +1,10 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Net.Http;
 
-namespace OpenTracing.Contrib.NetCore.Configuration
+namespace OpenTracing.Contrib.NetCore.DiagnosticSubscribers.CoreFx
 {
-    /// <summary>
-    /// Configuration options for the instrumentation of outgoing HTTP calls.
-    /// </summary>
-    public class HttpOutOptions
+    public class HttpHandlerDiagnosticOptions
     {
         public const string PropertyIgnore = "ot-ignore";
 
@@ -51,7 +48,7 @@ namespace OpenTracing.Contrib.NetCore.Configuration
         /// </summary>
         public Action<ISpan, HttpRequestMessage> OnRequest { get; set; }
 
-        public HttpOutOptions()
+        public HttpHandlerDiagnosticOptions()
         {
             // Default settings
 

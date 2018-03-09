@@ -8,28 +8,34 @@ using OpenTracing.Contrib.NetCore.Configuration;
 using OpenTracing.Propagation;
 using OpenTracing.Tag;
 
-namespace OpenTracing.Contrib.NetCore.Interceptors.HttpOut
+namespace OpenTracing.Contrib.NetCore.DiagnosticSubscribers.CoreFx
 {
     /// <summary>
     /// Instruments outgoing HTTP calls that use <see cref="HttpClientHandler"/>.
     /// <para/>See https://github.com/dotnet/corefx/blob/master/src/System.Net.Http/src/System/Net/Http/DiagnosticsHandler.cs
     /// <para/>and https://github.com/dotnet/corefx/blob/master/src/System.Net.Http/src/System/Net/Http/DiagnosticsHandlerLoggingStrings.cs
     /// </summary>
-    internal sealed class HttpOutInterceptor : DiagnosticInterceptor
+    internal sealed class HttpHandlerDiagnosticSubscriber : DiagnosticSubscriberWithAdapter
     {
+        public const string DiagnosticListenerName = "HttpHandlerDiagnosticListener";
+        public const string EventOnActivity = "System.Net.Http.HttpRequestOut";
+        public const string EventOnStart = "System.Net.Http.HttpRequestOut.Start";
+        public const string EventOnStop = "System.Net.Http.HttpRequestOut.Stop";
+        public const string EventOnException = "System.Net.Http.Exception";
+
         private const string PropertiesKey = "ot-Span";
 
-        private readonly HttpOutOptions _options;
+        private readonly HttpHandlerDiagnosticOptions _options;
 
-        protected override string ListenerName => "HttpHandlerDiagnosticListener";
+        protected override string ListenerName => DiagnosticListenerName;
 
-        public HttpOutInterceptor(ILoggerFactory loggerFactory, ITracer tracer, IOptions<HttpOutOptions> options)
+        public HttpHandlerDiagnosticSubscriber(ILoggerFactory loggerFactory, ITracer tracer, IOptions<CoreFxOptions> options)
             : base(loggerFactory, tracer)
         {
-            _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
+            _options = options?.Value?.HttpHandlerDiagnostic ?? throw new ArgumentNullException(nameof(options));
         }
 
-        [DiagnosticName("System.Net.Http.HttpRequestOut")]
+        [DiagnosticName(EventOnActivity)]
         public void OnActivity()
         {
             // HACK: There must be a method for the main activity name otherwise no activities are logged.
@@ -37,7 +43,7 @@ namespace OpenTracing.Contrib.NetCore.Interceptors.HttpOut
             // https://github.com/aspnet/Home/issues/2325
         }
 
-        [DiagnosticName("System.Net.Http.HttpRequestOut.Start")]
+        [DiagnosticName(EventOnStart)]
         public void OnStart(HttpRequestMessage request)
         {
             Execute(() =>
@@ -69,7 +75,7 @@ namespace OpenTracing.Contrib.NetCore.Interceptors.HttpOut
             });
         }
 
-        [DiagnosticName("System.Net.Http.Exception")]
+        [DiagnosticName(EventOnException)]
         public void OnException(HttpRequestMessage request, Exception exception)
         {
             Execute(() =>
@@ -81,7 +87,7 @@ namespace OpenTracing.Contrib.NetCore.Interceptors.HttpOut
             });
         }
 
-        [DiagnosticName("System.Net.Http.HttpRequestOut.Stop")]
+        [DiagnosticName(EventOnStop)]
         public void OnStop(HttpResponseMessage response, HttpRequestMessage request, TaskStatus requestTaskStatus)
         {
             Execute(() =>

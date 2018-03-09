@@ -17,13 +17,14 @@ namespace Samples.FrontendWeb
             return WebHost.CreateDefaultBuilder(args)
                 .UseStartup<Startup>()
                 .UseUrls(Constants.FrontendUrl)
+                .ConfigureServices(services =>
+                {
+                    // Enables OpenTracing instrumentation for ASP.NET Core, HttpClient, EF Core
+                    services.AddOpenTracing();
 
-                // Enables OpenTracing instrumentation for ASP.NET Core, HttpClient, EF Core
-                .UseOpenTracing()
-
-                // Register Zipkin (see Startup.Configure for how it is started)
-                .ConfigureServices(services => services.AddSingleton<ZipkinManager>())
-
+                    // Register Zipkin (see Startup.Configure for how it is started)
+                    services.AddSingleton<ZipkinManager>();
+                })
                 .Build();
         }
     }

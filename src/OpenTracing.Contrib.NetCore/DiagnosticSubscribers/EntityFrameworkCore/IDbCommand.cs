@@ -1,4 +1,4 @@
-namespace OpenTracing.Contrib.NetCore.Interceptors.EntityFrameworkCore
+namespace OpenTracing.Contrib.NetCore.DiagnosticSubscribers.EntityFrameworkCore
 {
     public interface IDbCommand
     {

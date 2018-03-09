@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
@@ -11,41 +10,23 @@ namespace OpenTracing.Contrib.NetCore
     /// </summary>
     public class InstrumentationService : IHostedService
     {
-        private readonly IEnumerable<DiagnosticInterceptor> _interceptors;
+        private readonly DiagnosticManager _diagnosticsManager;
 
-        private bool _started;
-
-        public InstrumentationService(IEnumerable<DiagnosticInterceptor> interceptors)
+        public InstrumentationService(DiagnosticManager diagnosticsManager)
         {
-            _interceptors = interceptors ?? throw new ArgumentNullException(nameof(interceptors));
+            _diagnosticsManager = diagnosticsManager ?? throw new ArgumentNullException(nameof(diagnosticsManager));
         }
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
-            if (!_started)
-            {
-                foreach (DiagnosticInterceptor interceptor in _interceptors)
-                {
-                    interceptor.Start();
-                }
-
-                _started = true;
-            }
+            _diagnosticsManager.Start();
 
             return Task.CompletedTask;
         }
 
         public Task StopAsync(CancellationToken cancellationToken)
         {
-            if (_started)
-            {
-                foreach (var interceptor in _interceptors)
-                {
-                    interceptor.Stop();
-                }
-
-                _started = false;
-            }
+            _diagnosticsManager.Stop();
 
             return Task.CompletedTask;
         }

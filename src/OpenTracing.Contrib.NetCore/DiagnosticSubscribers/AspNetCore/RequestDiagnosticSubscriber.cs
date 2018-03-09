@@ -4,31 +4,35 @@ using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.Extensions.DiagnosticAdapter;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using OpenTracing.Contrib.AspNetCore.Configuration;
-using OpenTracing.Contrib.NetCore;
+using OpenTracing.Contrib.NetCore.Configuration;
 using OpenTracing.Propagation;
 using OpenTracing.Tag;
 
-namespace OpenTracing.Contrib.AspNetCore.Interceptors.RequestIn
+namespace OpenTracing.Contrib.NetCore.DiagnosticSubscribers.AspNetCore
 {
     /// <summary>
     /// Instruments incoming HTTP requests.
     /// <para/>See https://github.com/aspnet/Hosting/blob/dev/src/Microsoft.AspNetCore.Hosting/Internal/HostingApplicationDiagnostics.cs
     /// </summary>
-    internal sealed class RequestInterceptor : DiagnosticInterceptor
+    internal sealed class RequestDiagnosticSubscriber : DiagnosticSubscriberWithAdapter
     {
-        private readonly RequestInOptions _options;
+        public const string DiagnosticListenerName = "Microsoft.AspNetCore";
+        public const string EventOnActivity = "Microsoft.AspNetCore.Hosting.HttpRequestIn";
+        public const string EventOnActivityStart = "Microsoft.AspNetCore.Hosting.HttpRequestIn.Start";
+        public const string EventOnActivityStop = "Microsoft.AspNetCore.Hosting.HttpRequestIn.Stop";
+        public const string EventOnUnhandledException = "Microsoft.AspNetCore.Hosting.UnhandledException";
 
-        // https://github.com/aspnet/Hosting/blob/dev/src/Microsoft.AspNetCore.Hosting/WebHostBuilder.cs
-        protected override string ListenerName => "Microsoft.AspNetCore";
+        private readonly RequestDiagnosticOptions _options;
 
-        public RequestInterceptor(ILoggerFactory loggerFactory, ITracer tracer, IOptions<RequestInOptions> options)
+        protected override string ListenerName => DiagnosticListenerName;
+
+        public RequestDiagnosticSubscriber(ILoggerFactory loggerFactory, ITracer tracer, IOptions<AspNetCoreOptions> options)
             : base(loggerFactory, tracer)
         {
-            _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
+            _options = options?.Value?.RequestDiagnostic ?? throw new ArgumentNullException(nameof(options));
         }
 
-        [DiagnosticName("Microsoft.AspNetCore.Hosting.HttpRequestIn")]
+        [DiagnosticName(EventOnActivity)]
         public void OnActivity()
         {
             // HACK: There must be a method for the main activity name otherwise no activities are logged.
@@ -36,8 +40,8 @@ namespace OpenTracing.Contrib.AspNetCore.Interceptors.RequestIn
             // https://github.com/aspnet/Home/issues/2325
         }
 
-        [DiagnosticName("Microsoft.AspNetCore.Hosting.HttpRequestIn.Start")]
-        public void OnBeginRequest(HttpContext httpContext)
+        [DiagnosticName(EventOnActivityStart)]
+        public void OnActivityStart(HttpContext httpContext)
         {
             Execute(() =>
             {
@@ -50,10 +54,10 @@ namespace OpenTracing.Contrib.AspNetCore.Interceptors.RequestIn
                 var request = httpContext.Request;
 
                 ISpanContext extractedSpanContext = null;
-                
+
                 if (_options.ExtractEnabled?.Invoke(httpContext) ?? true)
                 {
-                    extractedSpanContext = Tracer.Extract(BuiltinFormats.HttpHeaders, new HeadersExtractAdapter(request.Headers));
+                    extractedSpanContext = Tracer.Extract(BuiltinFormats.HttpHeaders, new RequestHeadersExtractAdapter(request.Headers));
                 }
 
                 IScope scope = Tracer.BuildSpan(_options.OperationNameResolver(httpContext))
@@ -68,7 +72,7 @@ namespace OpenTracing.Contrib.AspNetCore.Interceptors.RequestIn
             });
         }
 
-        [DiagnosticName("Microsoft.AspNetCore.Hosting.UnhandledException")]
+        [DiagnosticName(EventOnUnhandledException)]
         public void OnUnhandledException(HttpContext httpContext, Exception exception)
         {
             Execute(() =>
@@ -77,8 +81,8 @@ namespace OpenTracing.Contrib.AspNetCore.Interceptors.RequestIn
             });
         }
 
-        [DiagnosticName("Microsoft.AspNetCore.Hosting.HttpRequestIn.Stop")]
-        public void OnEndRequest(HttpContext httpContext)
+        [DiagnosticName(EventOnActivityStop)]
+        public void OnActivityStop(HttpContext httpContext)
         {
             Execute(() =>
             {

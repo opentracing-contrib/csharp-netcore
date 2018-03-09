@@ -2,9 +2,10 @@
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Http;
 
-namespace OpenTracing.Contrib.AspNetCore.Configuration
+namespace OpenTracing.Contrib.NetCore.DiagnosticSubscribers.AspNetCore
 {
-    public class RequestInOptions
+
+    public class RequestDiagnosticOptions
     {
         public const string DefaultComponent = "HttpIn";
 
@@ -46,7 +47,7 @@ namespace OpenTracing.Contrib.AspNetCore.Configuration
         /// </summary>
         public Action<ISpan, HttpContext> OnRequest { get; set; }
 
-        public RequestInOptions()
+        public RequestDiagnosticOptions()
         {
             // Default settings
 

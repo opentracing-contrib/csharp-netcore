@@ -4,13 +4,13 @@ using System.Collections.Generic;
 using Microsoft.AspNetCore.Http;
 using OpenTracing.Propagation;
 
-namespace OpenTracing.Contrib.AspNetCore.Interceptors.RequestIn
+namespace OpenTracing.Contrib.NetCore.DiagnosticSubscribers.AspNetCore
 {
-    internal sealed class HeadersExtractAdapter : ITextMap
+    internal sealed class RequestHeadersExtractAdapter : ITextMap
     {
         private readonly IHeaderDictionary _headers;
 
-        public HeadersExtractAdapter(IHeaderDictionary headers)
+        public RequestHeadersExtractAdapter(IHeaderDictionary headers)
         {
             _headers = headers ?? throw new ArgumentNullException(nameof(headers));
         }

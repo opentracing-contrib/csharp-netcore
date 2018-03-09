@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Http;
 
-namespace OpenTracing.Contrib.AspNetCore.Interceptors.Mvc
+namespace OpenTracing.Contrib.NetCore.DiagnosticSubscribers.AspNetCore
 {
     public interface IActionContext
     {

@@ -1,7 +1,7 @@
 using System;
 using System.Reflection;
 
-namespace OpenTracing.Contrib.AspNetCore.Interceptors.Mvc
+namespace OpenTracing.Contrib.NetCore.DiagnosticSubscribers.AspNetCore
 {
     public interface IActionDescriptor
     {

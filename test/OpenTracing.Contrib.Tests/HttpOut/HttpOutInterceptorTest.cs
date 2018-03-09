@@ -6,8 +6,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using OpenTracing.Contrib.NetCore;
 using OpenTracing.Contrib.NetCore.Configuration;
-using OpenTracing.Contrib.NetCore.Interceptors.HttpOut;
+using OpenTracing.Contrib.NetCore.DiagnosticSubscribers;
+using OpenTracing.Contrib.NetCore.DiagnosticSubscribers.CoreFx;
 using OpenTracing.Mock;
 using OpenTracing.Tag;
 using Xunit;
@@ -18,8 +20,9 @@ namespace OpenTracing.Contrib.Tests.HttpOut
     public class HttpOutInterceptorTest : IDisposable
     {
         private readonly MockTracer _tracer;
-        private readonly HttpOutOptions _options;
-        private readonly HttpOutInterceptor _interceptor;
+        private readonly HttpHandlerDiagnosticOptions _options;
+        private readonly HttpHandlerDiagnosticSubscriber _interceptor;
+        private readonly DiagnosticManager _diagnosticsManager;
         private readonly MockHttpMessageHandler _httpHandler;
         private readonly HttpClient _httpClient;
 
@@ -49,8 +52,11 @@ namespace OpenTracing.Contrib.Tests.HttpOut
             ILoggerFactory loggerFactory = new LoggerFactory().AddXunit(output);
 
             _tracer = new MockTracer();
-            _options = new HttpOutOptions();
-            _interceptor = new HttpOutInterceptor(loggerFactory, _tracer, Options.Create(_options));
+
+            CoreFxOptions coreFxOptions = new CoreFxOptions();
+            _options = coreFxOptions.HttpHandlerDiagnostic;
+
+            _interceptor = new HttpHandlerDiagnosticSubscriber(loggerFactory, _tracer, Options.Create(coreFxOptions));
 
             // Inner handler for mocking the result
             _httpHandler = new MockHttpMessageHandler();
@@ -62,12 +68,14 @@ namespace OpenTracing.Contrib.Tests.HttpOut
 
             _httpClient = new HttpClient(diagnosticsHandler);
 
-            _interceptor.Start();
+            _diagnosticsManager = new DiagnosticManager(loggerFactory, new DiagnosticSubscriber[] { _interceptor });
+
+            _diagnosticsManager.Start();
         }
 
         public void Dispose()
         {
-            _interceptor.Stop();
+            _diagnosticsManager.Dispose();
         }
 
         [Fact]
@@ -152,7 +160,7 @@ namespace OpenTracing.Contrib.Tests.HttpOut
         public async Task Ignores_requests_with_Ignore_property()
         {
             var request = new HttpRequestMessage(HttpMethod.Get, new Uri("http://www.example.com/api/values"));
-            request.Properties[HttpOutOptions.PropertyIgnore] = true;
+            request.Properties[HttpHandlerDiagnosticOptions.PropertyIgnore] = true;
 
             await _httpClient.SendAsync(request);
 

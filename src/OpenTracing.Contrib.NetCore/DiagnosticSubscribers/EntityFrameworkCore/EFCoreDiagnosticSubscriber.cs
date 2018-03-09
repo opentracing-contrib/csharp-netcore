@@ -1,16 +1,13 @@
 using System;
+using System.Data.Common;
 using Microsoft.Extensions.DiagnosticAdapter;
 using Microsoft.Extensions.Logging;
 using OpenTracing.Tag;
 
-namespace OpenTracing.Contrib.NetCore.Interceptors.EntityFrameworkCore
+namespace OpenTracing.Contrib.NetCore.DiagnosticSubscribers.EntityFrameworkCore
 {
-    internal sealed class EntityFrameworkCoreInterceptor : DiagnosticInterceptor
+    internal sealed class EFCoreDiagnosticSubscriber : DiagnosticSubscriberWithAdapter
     {
-        private const string EventBeforeExecuteCommand = "Microsoft.EntityFrameworkCore.BeforeExecuteCommand";
-        private const string EventAfterExecuteCommand = "Microsoft.EntityFrameworkCore.AfterExecuteCommand";
-        private const string EventCommandExecutionError = "Microsoft.EntityFrameworkCore.CommandExecutionError";
-
         private const string Component = "EFCore";
 
         private const string TagCommandText = "ef.command";
@@ -20,16 +17,13 @@ namespace OpenTracing.Contrib.NetCore.Interceptors.EntityFrameworkCore
         // https://github.com/aspnet/EntityFrameworkCore/blob/dev/src/EFCore/DbLoggerCategory.cs
         protected override string ListenerName => "Microsoft.EntityFrameworkCore";
 
-        public EntityFrameworkCoreInterceptor(ILoggerFactory loggerFactory, ITracer tracer)
+        public EFCoreDiagnosticSubscriber(ILoggerFactory loggerFactory, ITracer tracer)
             : base(loggerFactory, tracer)
         {
         }
 
-        /// <summary>
-        /// Microsoft.EntityFrameworkCore.Relational/Internal/RelationalDiagnostics.cs
-        /// </summary>
-        [DiagnosticName(EventBeforeExecuteCommand)]
-        public void OnBeforeExecuteCommand(IDbCommand command, string executeMethod, bool isAsync)
+        [DiagnosticName("Database.Command.CommandExecuting")]
+        public void OnCommandExecuting(DbCommand command, string executeMethod, bool isAsync)
         {
             Execute(() =>
             {
@@ -46,20 +40,14 @@ namespace OpenTracing.Contrib.NetCore.Interceptors.EntityFrameworkCore
             });
         }
 
-        /// <summary>
-        /// Microsoft.EntityFrameworkCore.Relational/Internal/RelationalDiagnostics.cs
-        /// </summary>
-        [DiagnosticName(EventAfterExecuteCommand)]
-        public void OnAfterExecuteCommand(IDbCommand command, string executeMethod, bool isAsync)
+        [DiagnosticName("Database.Command.CommandExecuted")]
+        public void OnAfterExecuteCommand(DbCommand command, string executeMethod, bool isAsync)
         {
             DisposeActiveScope();
         }
 
-        /// <summary>
-        /// Microsoft.EntityFrameworkCore.Relational/Internal/RelationalDiagnostics.cs
-        /// </summary>
-        [DiagnosticName(EventCommandExecutionError)]
-        public void OnCommandExecutionError(IDbCommand command, string executeMethod, bool isAsync, Exception exception)
+        [DiagnosticName("Database.Command.CommandError")]
+        public void OnCommandError(DbCommand command, string executeMethod, bool isAsync, Exception exception)
         {
             Execute(() =>
             {

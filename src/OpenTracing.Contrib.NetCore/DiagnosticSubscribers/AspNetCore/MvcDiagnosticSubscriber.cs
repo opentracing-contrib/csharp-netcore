@@ -1,13 +1,12 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DiagnosticAdapter;
 using Microsoft.Extensions.Logging;
-using OpenTracing.Contrib.NetCore;
 using OpenTracing.Contrib.NetCore.Internal;
 using OpenTracing.Tag;
 
-namespace OpenTracing.Contrib.AspNetCore.Interceptors.Mvc
+namespace OpenTracing.Contrib.NetCore.DiagnosticSubscribers.AspNetCore
 {
-    internal sealed class MvcInterceptor : DiagnosticInterceptor
+    internal sealed class MvcDiagnosticSubscriber : DiagnosticSubscriberWithAdapter
     {
         // Events
         private const string EventBeforeAction = "Microsoft.AspNetCore.Mvc.BeforeAction";
@@ -26,7 +25,7 @@ namespace OpenTracing.Contrib.AspNetCore.Interceptors.Mvc
 
         protected override string ListenerName => "Microsoft.AspNetCore";
 
-        public MvcInterceptor(ILoggerFactory loggerFactory, ITracer tracer)
+        public MvcDiagnosticSubscriber(ILoggerFactory loggerFactory, ITracer tracer)
             : base(loggerFactory, tracer)
         {
             _proxyAdapter = new ProxyAdapter();
