@@ -30,10 +30,10 @@ namespace Microsoft.Extensions.DependencyInjection
             builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<DiagnosticSubscriber, RequestDiagnosticSubscriber>());
             builder.Services.Configure<CoreFxOptions>(x =>
             {
-                x.GenericDiagnostic.IgnoreEvent(RequestDiagnosticSubscriber.DiagnosticListenerName, RequestDiagnosticSubscriber.EventOnActivity);
-                x.GenericDiagnostic.IgnoreEvent(RequestDiagnosticSubscriber.DiagnosticListenerName, RequestDiagnosticSubscriber.EventOnActivityStart);
-                x.GenericDiagnostic.IgnoreEvent(RequestDiagnosticSubscriber.DiagnosticListenerName, RequestDiagnosticSubscriber.EventOnActivityStop);
-                x.GenericDiagnostic.IgnoreEvent(RequestDiagnosticSubscriber.DiagnosticListenerName, RequestDiagnosticSubscriber.EventOnUnhandledException);
+                x.GenericDiagnostic.IgnoreEvent(RequestDiagnosticSubscriber.DiagnosticListenerName, RequestDiagnosticSubscriber.EventActivity);
+                x.GenericDiagnostic.IgnoreEvent(RequestDiagnosticSubscriber.DiagnosticListenerName, RequestDiagnosticSubscriber.EventActivityStart);
+                x.GenericDiagnostic.IgnoreEvent(RequestDiagnosticSubscriber.DiagnosticListenerName, RequestDiagnosticSubscriber.EventActivityStop);
+                x.GenericDiagnostic.IgnoreEvent(RequestDiagnosticSubscriber.DiagnosticListenerName, RequestDiagnosticSubscriber.EventUnhandledException);
 
                 // Deprecated Hosting events
                 x.GenericDiagnostic.IgnoreEvent(RequestDiagnosticSubscriber.DiagnosticListenerName, "Microsoft.AspNetCore.Hosting.BeginRequest");
@@ -69,12 +69,11 @@ namespace Microsoft.Extensions.DependencyInjection
 
             builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<DiagnosticSubscriber, GenericDiagnosticSubscriber>());
 
-            // TODO @cweiss!!
-            //builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<DiagnosticSubscriber, HttpHandlerDiagnosticSubscriber>());
-            //builder.Services.Configure<CoreFxOptions>(x =>
-            //{
-            //    x.GenericDiagnostic.IgnoredListenerNames.Add(HttpHandlerDiagnosticSubscriber.DiagnosticListenerName);
-            //});
+            builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<DiagnosticSubscriber, HttpHandlerDiagnosticSubscriber>());
+            builder.Services.Configure<CoreFxOptions>(x =>
+            {
+                x.GenericDiagnostic.IgnoredListenerNames.Add(HttpHandlerDiagnosticSubscriber.DiagnosticListenerName);
+            });
 
             return ConfigureCoreFx(builder, options);
         }

@@ -1,10 +1,10 @@
 using System;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Extensions;
-using Microsoft.Extensions.DiagnosticAdapter;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using OpenTracing.Contrib.NetCore.Configuration;
+using OpenTracing.Contrib.NetCore.Internal;
 using OpenTracing.Propagation;
 using OpenTracing.Tag;
 
@@ -14,13 +14,18 @@ namespace OpenTracing.Contrib.NetCore.DiagnosticSubscribers.AspNetCore
     /// Instruments incoming HTTP requests.
     /// <para/>See https://github.com/aspnet/Hosting/blob/dev/src/Microsoft.AspNetCore.Hosting/Internal/HostingApplicationDiagnostics.cs
     /// </summary>
-    internal sealed class RequestDiagnosticSubscriber : DiagnosticSubscriberWithAdapter
+    internal sealed class RequestDiagnosticSubscriber : DiagnosticSubscriberWithObserver
     {
         public const string DiagnosticListenerName = "Microsoft.AspNetCore";
-        public const string EventOnActivity = "Microsoft.AspNetCore.Hosting.HttpRequestIn";
-        public const string EventOnActivityStart = "Microsoft.AspNetCore.Hosting.HttpRequestIn.Start";
-        public const string EventOnActivityStop = "Microsoft.AspNetCore.Hosting.HttpRequestIn.Stop";
-        public const string EventOnUnhandledException = "Microsoft.AspNetCore.Hosting.UnhandledException";
+
+        public const string EventActivity = "Microsoft.AspNetCore.Hosting.HttpRequestIn";
+        public const string EventActivityStart = EventActivity + ".Start";
+        public const string EventActivityStop = EventActivity + ".Stop";
+        public const string EventUnhandledException = "Microsoft.AspNetCore.Hosting.UnhandledException";
+
+        private readonly PropertyFetcher _activityStart_HttpContextFetcher = new PropertyFetcher("HttpContext");
+        private readonly PropertyFetcher _activityStop_HttpContextFetcher = new PropertyFetcher("HttpContext");
+        private readonly PropertyFetcher _unhandledException_ExceptionFetcher = new PropertyFetcher("Exception");
 
         private readonly RequestDiagnosticOptions _options;
 
@@ -32,69 +37,67 @@ namespace OpenTracing.Contrib.NetCore.DiagnosticSubscribers.AspNetCore
             _options = options?.Value?.RequestDiagnostic ?? throw new ArgumentNullException(nameof(options));
         }
 
-        [DiagnosticName(EventOnActivity)]
-        public void OnActivity()
+        protected override void OnNextCore(string eventName, object arg)
         {
-            // HACK: There must be a method for the main activity name otherwise no activities are logged.
-            // So this is just a no-op.
-            // https://github.com/aspnet/Home/issues/2325
-        }
-
-        [DiagnosticName(EventOnActivityStart)]
-        public void OnActivityStart(HttpContext httpContext)
-        {
-            Execute(() =>
+            switch (eventName)
             {
-                if (ShouldIgnore(httpContext))
-                {
-                    Logger.LogDebug("Ignoring request");
-                    return;
-                }
+                case EventActivityStart:
+                    {
+                        var httpContext = (HttpContext)_activityStart_HttpContextFetcher.Fetch(arg);
 
-                var request = httpContext.Request;
+                        if (ShouldIgnore(httpContext))
+                        {
+                            Logger.LogDebug("Ignoring request");
+                            return;
+                        }
 
-                ISpanContext extractedSpanContext = null;
+                        var request = httpContext.Request;
 
-                if (_options.ExtractEnabled?.Invoke(httpContext) ?? true)
-                {
-                    extractedSpanContext = Tracer.Extract(BuiltinFormats.HttpHeaders, new RequestHeadersExtractAdapter(request.Headers));
-                }
+                        ISpanContext extractedSpanContext = null;
 
-                string operationName = _options.OperationNameResolver(httpContext);
+                        if (_options.ExtractEnabled?.Invoke(httpContext) ?? true)
+                        {
+                            extractedSpanContext = Tracer.Extract(BuiltinFormats.HttpHeaders, new RequestHeadersExtractAdapter(request.Headers));
+                        }
 
-                IScope scope = Tracer.BuildSpan(operationName)
-                    .AsChildOf(extractedSpanContext)
-                    .WithTag(Tags.Component.Key, _options.ComponentName)
-                    .WithTag(Tags.SpanKind.Key, Tags.SpanKindServer)
-                    .WithTag(Tags.HttpMethod.Key, request.Method)
-                    .WithTag(Tags.HttpUrl.Key, request.GetDisplayUrl())
-                    .StartActive(finishSpanOnDispose: true);
+                        string operationName = _options.OperationNameResolver(httpContext);
 
-                _options.OnRequest?.Invoke(scope.Span, httpContext);
-            });
-        }
+                        IScope scope = Tracer.BuildSpan(operationName)
+                            .AsChildOf(extractedSpanContext)
+                            .WithTag(Tags.Component.Key, _options.ComponentName)
+                            .WithTag(Tags.SpanKind.Key, Tags.SpanKindServer)
+                            .WithTag(Tags.HttpMethod.Key, request.Method)
+                            .WithTag(Tags.HttpUrl.Key, request.GetDisplayUrl())
+                            .StartActive(finishSpanOnDispose: true);
 
-        [DiagnosticName(EventOnUnhandledException)]
-        public void OnUnhandledException(HttpContext httpContext, Exception exception)
-        {
-            Execute(() =>
-            {
-                Tracer.ActiveSpan?.SetException(exception);
-            });
-        }
+                        _options.OnRequest?.Invoke(scope.Span, httpContext);
+                    }
+                    break;
 
-        [DiagnosticName(EventOnActivityStop)]
-        public void OnActivityStop(HttpContext httpContext)
-        {
-            Execute(() =>
-            {
-                IScope scope = Tracer.ScopeManager.Active;
-                if (scope != null)
-                {
-                    Tags.HttpStatus.Set(scope.Span, httpContext.Response.StatusCode);
-                    scope.Dispose();
-                }
-            });
+                case EventUnhandledException:
+                    {
+                        ISpan span = Tracer.ActiveSpan;
+                        if (span != null)
+                        {
+                            var exception = (Exception)_unhandledException_ExceptionFetcher.Fetch(arg);
+                            span.SetException(exception);
+                        }
+                    }
+                    break;
+
+                case EventActivityStop:
+                    {
+                        IScope scope = Tracer.ScopeManager.Active;
+                        if (scope != null)
+                        {
+                            var httpContext = (HttpContext)_activityStop_HttpContextFetcher.Fetch(arg);
+
+                            Tags.HttpStatus.Set(scope.Span, httpContext.Response.StatusCode);
+                            scope.Dispose();
+                        }
+                    }
+                    break;
+            }
         }
 
         private bool ShouldIgnore(HttpContext httpContext)

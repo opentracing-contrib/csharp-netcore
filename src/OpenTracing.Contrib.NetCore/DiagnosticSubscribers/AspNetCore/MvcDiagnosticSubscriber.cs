@@ -1,12 +1,12 @@
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.DiagnosticAdapter;
+using Microsoft.AspNetCore.Mvc.Abstractions;
+using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.Extensions.Logging;
 using OpenTracing.Contrib.NetCore.Internal;
 using OpenTracing.Tag;
 
 namespace OpenTracing.Contrib.NetCore.DiagnosticSubscribers.AspNetCore
 {
-    internal sealed class MvcDiagnosticSubscriber : DiagnosticSubscriberWithAdapter
+    internal sealed class MvcDiagnosticSubscriber : DiagnosticSubscriberWithObserver
     {
         // Events
         public const string DiagnosticListenerName = "Microsoft.AspNetCore";
@@ -22,86 +22,71 @@ namespace OpenTracing.Contrib.NetCore.DiagnosticSubscribers.AspNetCore
         private const string ResultComponent = "AspNetCore.MvcResult";
         private const string ResultTagType = "result.type";
 
-        private readonly ProxyAdapter _proxyAdapter;
+        private readonly PropertyFetcher _beforeAction_HttpContextFetcher = new PropertyFetcher("httpContext");
+        private readonly PropertyFetcher _beforeAction_ActionDescriptorFetcher = new PropertyFetcher("actionDescriptor");
+        private readonly PropertyFetcher _beforeActionResult_ResultFetcher = new PropertyFetcher("result");
+        
 
         protected override string ListenerName => DiagnosticListenerName;
 
         public MvcDiagnosticSubscriber(ILoggerFactory loggerFactory, ITracer tracer)
             : base(loggerFactory, tracer)
         {
-            _proxyAdapter = new ProxyAdapter();
-
-            _proxyAdapter.Register("Microsoft.AspNetCore.Mvc.Controllers.ControllerActionDescriptor");
-            _proxyAdapter.Register("Microsoft.AspNetCore.Mvc.Abstractions.ActionDescriptor");
         }
 
-        [DiagnosticName(EventBeforeAction)]
-        public void OnBeforeAction(object actionDescriptor, HttpContext httpContext)
+        protected override void OnNextCore(string eventName, object arg)
         {
-            // NOTE: This event is the start of the action pipeline. The action has been selected, the route
-            //       has been selected but no filters have run and model binding hasn't occured.
-            Execute(() =>
+            switch (eventName)
             {
-                IActionDescriptor typedActionDescriptor = ConvertActionDescriptor(actionDescriptor);
+                case EventBeforeAction:
+                    {
+                        // NOTE: This event is the start of the action pipeline. The action has been selected, the route
+                        //       has been selected but no filters have run and model binding hasn't occured.
 
-                string operationName = $"action_{typedActionDescriptor.ControllerName}/{typedActionDescriptor.ActionName}";
+                        var actionDescriptor = (ActionDescriptor)_beforeAction_ActionDescriptorFetcher.Fetch(arg);
+                        var controllerActionDescriptor = actionDescriptor as ControllerActionDescriptor;
 
-                Tracer.BuildSpan(operationName)
-                    .WithTag(Tags.Component.Key, ActionComponent)
-                    .WithTag(ActionTagControllerName, typedActionDescriptor.ControllerName)
-                    .WithTag(ActionTagActionName, typedActionDescriptor.ActionName)
-                    .StartActive(finishSpanOnDispose: true);
-            });
-        }
-
-        [DiagnosticName(EventAfterAction)]
-        public void OnAfterAction(HttpContext httpContext)
-        {
-            DisposeActiveScope();
-        }
-
-        [DiagnosticName(EventBeforeActionResult)]
-        public void OnBeforeActionResult(IActionContext actionContext, object result)
-        {
-            // NOTE: This event is the start of the result pipeline. The action has been executed, but
-            //       we haven't yet determined which view (if any) will handle the request
-
-            Execute(() =>
-            {
-                string resultType = result.GetType().Name;
-                string operationName = $"result_{resultType}";
-
-                Tracer.BuildSpan(operationName)
-                    .WithTag(Tags.Component.Key, ResultComponent)
-                    .WithTag(ResultTagType, resultType)
-                    .StartActive(finishSpanOnDispose: true);
-            });
-        }
-
-        [DiagnosticName(EventAfterActionResult)]
-        public void OnAfterActionResult(IActionContext actionContext)
-        {
-            DisposeActiveScope();
-        }
-
-        private IActionDescriptor ConvertActionDescriptor(object actionDescriptor)
-        {
-            IActionDescriptor typedActionDescriptor = null;
-
-            // NOTE: ActionDescriptor is usually ControllerActionDescriptor but the compile time type is
-            //       ActionDescriptor. This is a problem because we are missing the ControllerName which
-            //       we use a lot.
-            switch (actionDescriptor.GetType().FullName)
-            {
-                case "Microsoft.AspNetCore.Mvc.Controllers.ControllerActionDescriptor":
-                    typedActionDescriptor = _proxyAdapter.Process<IActionDescriptor>("Microsoft.AspNetCore.Mvc.Controllers.ControllerActionDescriptor", actionDescriptor);
+                        string operationName = controllerActionDescriptor != null
+                            ? $"Action {controllerActionDescriptor.ControllerTypeInfo.FullName}/{controllerActionDescriptor.ActionName}"
+                            : $"Action {actionDescriptor.DisplayName}";
+                        
+                        Tracer.BuildSpan(operationName)
+                            .WithTag(Tags.Component.Key, ActionComponent)
+                            .WithTag(ActionTagControllerName, controllerActionDescriptor?.ControllerTypeInfo.FullName)
+                            .WithTag(ActionTagActionName, controllerActionDescriptor?.ActionName)
+                            .StartActive(finishSpanOnDispose: true);
+                    }
                     break;
-                case "Microsoft.AspNetCore.Mvc.Abstractions.ActionDescriptor":
-                    typedActionDescriptor = _proxyAdapter.Process<IActionDescriptor>("Microsoft.AspNetCore.Mvc.Abstractions.ActionDescriptor", actionDescriptor);
+
+                case EventAfterAction:
+                    {
+                        DisposeActiveScope(isScopeRequired: true);
+                    }
+                    break;
+
+                case EventBeforeActionResult:
+                    {
+                        // NOTE: This event is the start of the result pipeline. The action has been executed, but
+                        //       we haven't yet determined which view (if any) will handle the request
+
+                        object result = _beforeActionResult_ResultFetcher.Fetch(arg);
+
+                        string resultType = result.GetType().Name;
+                        string operationName = $"Result {resultType}";
+
+                        Tracer.BuildSpan(operationName)
+                            .WithTag(Tags.Component.Key, ResultComponent)
+                            .WithTag(ResultTagType, resultType)
+                            .StartActive(finishSpanOnDispose: true);
+                    }
+                    break;
+
+                case EventAfterActionResult:
+                    {
+                        DisposeActiveScope(isScopeRequired: true);
+                    }
                     break;
             }
-
-            return typedActionDescriptor;
         }
     }
 }

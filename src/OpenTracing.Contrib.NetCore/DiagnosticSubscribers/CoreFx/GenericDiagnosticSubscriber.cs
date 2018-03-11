@@ -159,6 +159,11 @@ namespace OpenTracing.Contrib.NetCore.DiagnosticSubscribers.CoreFx
                     {
                         fields.Add("arg", arg);
                     }
+                    else if (argType.Namespace == null)
+                    {
+                        // Anonymous types usually contain complex objects so their output is not really useful.
+                        // Ignoring them for now.
+                    }
                     else
                     {
                         fields.Add("arg", arg.ToString());
