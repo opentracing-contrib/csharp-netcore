@@ -6,7 +6,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using OpenTracing.Contrib.NetCore;
 using OpenTracing.Contrib.NetCore.Configuration;
 using OpenTracing.Contrib.NetCore.DiagnosticSubscribers;
 using OpenTracing.Contrib.NetCore.DiagnosticSubscribers.CoreFx;
@@ -15,7 +14,7 @@ using OpenTracing.Tag;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace OpenTracing.Contrib.Tests.CoreFx
+namespace OpenTracing.Contrib.NetCore.Tests.CoreFx
 {
     [Collection("DiagnosticSource") /* All DiagnosticSource tests must be in the same collection to ensure they are NOT run in parallel. */]
     public class HttpHandlerDiagnosticTest : IDisposable

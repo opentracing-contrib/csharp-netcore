@@ -13,7 +13,7 @@ using OpenTracing.Tag;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace OpenTracing.Contrib.Tests.AspNetCore
+namespace OpenTracing.Contrib.NetCore.Tests.AspNetCore
 {
     [Collection("DiagnosticSource") /* All DiagnosticSource tests must be in the same collection to ensure they are NOT run in parallel. */]
     public class RequestDiagnosticTest : IDisposable

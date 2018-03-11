@@ -25,7 +25,7 @@ namespace OpenTracing.Contrib.NetCore.DiagnosticSubscribers.AspNetCore
 
         private readonly PropertyFetcher _activityStart_HttpContextFetcher = new PropertyFetcher("HttpContext");
         private readonly PropertyFetcher _activityStop_HttpContextFetcher = new PropertyFetcher("HttpContext");
-        private readonly PropertyFetcher _unhandledException_ExceptionFetcher = new PropertyFetcher("Exception");
+        private readonly PropertyFetcher _unhandledException_ExceptionFetcher = new PropertyFetcher("exception");
 
         private readonly RequestDiagnosticOptions _options;
 

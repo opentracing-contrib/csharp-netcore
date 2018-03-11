@@ -1,7 +1,7 @@
 ﻿// From https://github.com/aspnet/Logging/blob/dev/src/Microsoft.Extensions.Logging.Testing/XunitLoggerFactoryExtensions.cs
 
 using Microsoft.Extensions.DependencyInjection;
-using OpenTracing.Contrib.Tests.Logging;
+using OpenTracing.Contrib.NetCore.Tests.Logging;
 using Xunit.Abstractions;
 
 namespace Microsoft.Extensions.Logging

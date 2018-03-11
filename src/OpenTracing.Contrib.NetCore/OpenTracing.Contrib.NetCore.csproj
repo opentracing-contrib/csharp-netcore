@@ -1,13 +1,15 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp2.0</TargetFramework>
+    <TargetFrameworks>netcoreapp2.0</TargetFrameworks>
+    <IsPackable>true</IsPackable>
     <Description>Adds OpenTracing instrumentation for .NET Core apps that use the `Microsoft.Extensions.*` stack.
 Instrumented components: Outgoing HTTP calls, Entity Framework Core commands</Description>
     <PackageTags>opentracing;distributed-tracing;tracing;netcore</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- Main dependencies -->
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="2.0.0" />
     <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="2.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="2.0.0" />
@@ -17,6 +19,7 @@ Instrumented components: Outgoing HTTP calls, Entity Framework Core commands</De
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Instrumented libraries (which are not visible as actual dependencies) -->
     <PackageReference Include="Microsoft.AspNetCore.Hosting.Abstractions" Version="2.0.0" PrivateAssets="All" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Core" Version="2.0.0" PrivateAssets="All" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="2.0.0" PrivateAssets="All" />
