@@ -19,6 +19,13 @@ namespace Microsoft.Extensions.DependencyInjection
                 throw new ArgumentNullException(nameof(builder));
 
             builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<DiagnosticSubscriber, MvcDiagnosticSubscriber>());
+            builder.Services.Configure<CoreFxOptions>(x =>
+            {
+                x.GenericDiagnostic.IgnoreEvent(MvcDiagnosticSubscriber.DiagnosticListenerName, MvcDiagnosticSubscriber.EventBeforeAction);
+                x.GenericDiagnostic.IgnoreEvent(MvcDiagnosticSubscriber.DiagnosticListenerName, MvcDiagnosticSubscriber.EventAfterAction);
+                x.GenericDiagnostic.IgnoreEvent(MvcDiagnosticSubscriber.DiagnosticListenerName, MvcDiagnosticSubscriber.EventBeforeActionResult);
+                x.GenericDiagnostic.IgnoreEvent(MvcDiagnosticSubscriber.DiagnosticListenerName, MvcDiagnosticSubscriber.EventAfterActionResult);
+            });
 
             builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<DiagnosticSubscriber, RequestDiagnosticSubscriber>());
             builder.Services.Configure<CoreFxOptions>(x =>
@@ -62,11 +69,12 @@ namespace Microsoft.Extensions.DependencyInjection
 
             builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<DiagnosticSubscriber, GenericDiagnosticSubscriber>());
 
-            builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<DiagnosticSubscriber, HttpHandlerDiagnosticSubscriber>());
-            builder.Services.Configure<CoreFxOptions>(x =>
-            {
-                x.GenericDiagnostic.IgnoredListenerNames.Add(HttpHandlerDiagnosticSubscriber.DiagnosticListenerName);
-            });
+            // TODO @cweiss!!
+            //builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<DiagnosticSubscriber, HttpHandlerDiagnosticSubscriber>());
+            //builder.Services.Configure<CoreFxOptions>(x =>
+            //{
+            //    x.GenericDiagnostic.IgnoredListenerNames.Add(HttpHandlerDiagnosticSubscriber.DiagnosticListenerName);
+            //});
 
             return ConfigureCoreFx(builder, options);
         }
@@ -91,12 +99,35 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <summary>
         /// Adds instrumentation for Entity Framework Core.
         /// </summary>
-        public static IOpenTracingBuilder AddEntityFrameworkCore(this IOpenTracingBuilder builder)
+        public static IOpenTracingBuilder AddEntityFrameworkCore(this IOpenTracingBuilder builder, Action<EntityFrameworkCoreOptions> options = null)
         {
             if (builder == null)
                 throw new ArgumentNullException(nameof(builder));
 
             builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<DiagnosticSubscriber, EFCoreDiagnosticSubscriber>());
+            builder.Services.Configure<CoreFxOptions>(x =>
+            {
+                x.GenericDiagnostic.IgnoreEvent(EFCoreDiagnosticSubscriber.DiagnosticListenerName, EFCoreDiagnosticSubscriber.EventOnCommandExecuting);
+                x.GenericDiagnostic.IgnoreEvent(EFCoreDiagnosticSubscriber.DiagnosticListenerName, EFCoreDiagnosticSubscriber.EventOnCommandExecuted);
+                x.GenericDiagnostic.IgnoreEvent(EFCoreDiagnosticSubscriber.DiagnosticListenerName, EFCoreDiagnosticSubscriber.EventOnCommandError);
+            });
+
+            return ConfigureEntityFrameworkCore(builder, options);
+        }
+
+        /// <summary>
+        /// Configuration options for the instrumentation of Entity Framework Core.
+        /// </summary>
+        /// <seealso cref="AddEntityFrameworkCore(IOpenTracingBuilder, Action{EntityFrameworkCoreOptions})"/>
+        public static IOpenTracingBuilder ConfigureEntityFrameworkCore(this IOpenTracingBuilder builder, Action<EntityFrameworkCoreOptions> options)
+        {
+            if (builder == null)
+                throw new ArgumentNullException(nameof(builder));
+
+            if (options != null)
+            {
+                builder.Services.Configure(options);
+            }
 
             return builder;
         }

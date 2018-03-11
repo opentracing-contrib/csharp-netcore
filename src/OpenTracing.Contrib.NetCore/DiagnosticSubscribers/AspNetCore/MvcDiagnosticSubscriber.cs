@@ -9,10 +9,11 @@ namespace OpenTracing.Contrib.NetCore.DiagnosticSubscribers.AspNetCore
     internal sealed class MvcDiagnosticSubscriber : DiagnosticSubscriberWithAdapter
     {
         // Events
-        private const string EventBeforeAction = "Microsoft.AspNetCore.Mvc.BeforeAction";
-        private const string EventAfterAction = "Microsoft.AspNetCore.Mvc.AfterAction";
-        private const string EventBeforeActionResult = "Microsoft.AspNetCore.Mvc.BeforeActionResult";
-        private const string EventAfterActionResult = "Microsoft.AspNetCore.Mvc.AfterActionResult";
+        public const string DiagnosticListenerName = "Microsoft.AspNetCore";
+        public const string EventBeforeAction = "Microsoft.AspNetCore.Mvc.BeforeAction";
+        public const string EventAfterAction = "Microsoft.AspNetCore.Mvc.AfterAction";
+        public const string EventBeforeActionResult = "Microsoft.AspNetCore.Mvc.BeforeActionResult";
+        public const string EventAfterActionResult = "Microsoft.AspNetCore.Mvc.AfterActionResult";
 
         private const string ActionComponent = "AspNetCore.MvcAction";
         private const string ActionTagActionName = "action";
@@ -23,7 +24,7 @@ namespace OpenTracing.Contrib.NetCore.DiagnosticSubscribers.AspNetCore
 
         private readonly ProxyAdapter _proxyAdapter;
 
-        protected override string ListenerName => "Microsoft.AspNetCore";
+        protected override string ListenerName => DiagnosticListenerName;
 
         public MvcDiagnosticSubscriber(ILoggerFactory loggerFactory, ITracer tracer)
             : base(loggerFactory, tracer)

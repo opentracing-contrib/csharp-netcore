@@ -38,7 +38,7 @@ namespace OpenTracing.Contrib.NetCore.DiagnosticSubscribers.CoreFx
             private readonly HashSet<string> _ignoredEvents;
 
             private readonly IDisposable _subscription;
-            
+
 
             public GenericDiagnosticsSubscription(GenericDiagnosticSubscriber subscriber, DiagnosticListener diagnosticListener)
             {
@@ -65,39 +65,91 @@ namespace OpenTracing.Contrib.NetCore.DiagnosticSubscribers.CoreFx
 
             public void OnNext(KeyValuePair<string, object> value)
             {
-                if (_ignoredEvents != null && _ignoredEvents.Contains(value.Key))
+                string eventName = value.Key;
+                object untypedArg = value.Value;
+
+                try
                 {
-                    if (_subscriber.IsLogLevelTraceEnabled)
+                    if (_ignoredEvents != null && _ignoredEvents.Contains(eventName))
                     {
-                        _subscriber.Logger.LogTrace("Ignoring event '{ListenerName}/{Event}'", _listenerName, value.Key);
+                        if (_subscriber.IsLogLevelTraceEnabled)
+                        {
+                            _subscriber.Logger.LogTrace("Ignoring event '{ListenerName}/{Event}'", _listenerName, eventName);
+                        }
+
+                        return;
                     }
 
-                    return;
+                    Activity activity = Activity.Current;
+
+                    if (eventName.EndsWith(".Start") && activity != null)
+                    {
+                        HandleActivityStart(eventName, activity, untypedArg);
+                    }
+                    else if (eventName.EndsWith(".Stop") && activity != null)
+                    {
+                        HandleActivityStop(eventName, activity);
+                    }
+                    else
+                    {
+                        HandleRegularEvent(eventName, untypedArg);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _subscriber.Logger.LogWarning(ex, "Event-Exception: {ListenerName}/{Event}", _listenerName, value.Key);
+                }
+            }
+
+            private void HandleActivityStart(string eventName, Activity activity, object untypedArg)
+            {
+                ISpanBuilder spanBuilder = _subscriber.Tracer.BuildSpan(activity.OperationName)
+                    .WithTag(Tags.Component.Key, _listenerName);
+
+                foreach (var tag in activity.Tags)
+                {
+                    spanBuilder.WithTag(tag.Key, tag.Value);
                 }
 
+                spanBuilder.StartActive(finishSpanOnDispose: true);
+            }
+
+            private void HandleActivityStop(string eventName, Activity activity)
+            {
+                IScope scope = _subscriber.Tracer.ScopeManager.Active;
+                if (scope != null)
+                {
+                    scope.Dispose();
+                }
+                else
+                {
+                    _subscriber.Logger.LogWarning("No scope found. Event: {ListenerName}/{Event}", _listenerName, eventName);
+                }
+            }
+
+            private void HandleRegularEvent(string eventName, object untypedArg)
+            {
                 ISpan span = _subscriber.Tracer.ActiveSpan;
 
                 if (span != null)
                 {
-                    span.Log(GetLogFields(value));
+                    span.Log(GetLogFields(eventName, untypedArg));
                 }
                 else if (_subscriber.IsLogLevelTraceEnabled)
                 {
-                    _subscriber.Logger.LogTrace("No ActiveSpan. Event: {ListenerName}/{Event}", _listenerName, value.Key);
+                    _subscriber.Logger.LogTrace("No ActiveSpan. Event: {ListenerName}/{Event}", _listenerName, eventName);
                 }
             }
 
-            private Dictionary<string, object> GetLogFields(KeyValuePair<string, object> value)
+            private Dictionary<string, object> GetLogFields(string eventName, object arg)
             {
                 var fields = new Dictionary<string, object>
                 {
-                    { LogFields.Event, value.Key },
+                    { LogFields.Event, eventName },
                     { Tags.Component.Key, _listenerName }
                 };
 
                 // TODO improve the hell out of this... :)
-
-                object arg = value.Value;
 
                 if (arg != null)
                 {

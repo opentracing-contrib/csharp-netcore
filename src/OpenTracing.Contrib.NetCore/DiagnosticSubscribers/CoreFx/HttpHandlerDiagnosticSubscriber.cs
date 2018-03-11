@@ -54,7 +54,9 @@ namespace OpenTracing.Contrib.NetCore.DiagnosticSubscribers.CoreFx
                     return;
                 }
 
-                ISpan span = Tracer.BuildSpan(_options.OperationNameResolver(request))
+                string operationName = _options.OperationNameResolver(request);
+
+                ISpan span = Tracer.BuildSpan(operationName)
                     .WithTag(Tags.SpanKind.Key, Tags.SpanKindClient)
                     .WithTag(Tags.Component.Key, _options.ComponentName)
                     .WithTag(Tags.HttpMethod.Key, request.Method.ToString())

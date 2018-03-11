@@ -10,15 +10,15 @@ namespace OpenTracing.Contrib.NetCore.DiagnosticSubscribers
     /// </summary>
     public abstract class DiagnosticSubscriberWithAdapter : DiagnosticSubscriber
     {
-        protected DiagnosticSubscriberWithAdapter(ILoggerFactory loggerFactory, ITracer tracer)
-            : base(loggerFactory, tracer)
-        {
-        }
-
         /// <summary>
         /// The name of the <see cref="DiagnosticListener"/> that should be instrumented.
         /// </summary>
         protected abstract string ListenerName { get; }
+
+        protected DiagnosticSubscriberWithAdapter(ILoggerFactory loggerFactory, ITracer tracer)
+            : base(loggerFactory, tracer)
+        {
+        }
 
         public override IDisposable SubscribeIfMatch(DiagnosticListener diagnosticListener)
         {

@@ -60,7 +60,9 @@ namespace OpenTracing.Contrib.NetCore.DiagnosticSubscribers.AspNetCore
                     extractedSpanContext = Tracer.Extract(BuiltinFormats.HttpHeaders, new RequestHeadersExtractAdapter(request.Headers));
                 }
 
-                IScope scope = Tracer.BuildSpan(_options.OperationNameResolver(httpContext))
+                string operationName = _options.OperationNameResolver(httpContext);
+
+                IScope scope = Tracer.BuildSpan(operationName)
                     .AsChildOf(extractedSpanContext)
                     .WithTag(Tags.Component.Key, _options.ComponentName)
                     .WithTag(Tags.SpanKind.Key, Tags.SpanKindServer)

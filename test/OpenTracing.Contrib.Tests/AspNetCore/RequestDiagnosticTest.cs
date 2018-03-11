@@ -59,14 +59,18 @@ namespace OpenTracing.Contrib.Tests.AspNetCore
                     });
                     app.Map("/wait", x =>
                     {
-                        x.Run(async context => await Task.Delay(TimeSpan.FromMilliseconds(int.Parse(context.Request.Query["delay"]))));
+                        x.Run(async context =>
+                        {
+                            int delay = int.Parse(context.Request.Query["delay"]);
+                            await Task.Delay(TimeSpan.FromMilliseconds(delay), context.RequestAborted);
+                        });
                     });
                 }));
 
             _client = _server.CreateClient();
         }
 
-        private Task<string> GetAsync(string requestUri, int expectedSpans = 1, Action<AspNetCoreOptions> options = null, 
+        private Task<string> GetAsync(string requestUri, int expectedSpans = 1, Action<AspNetCoreOptions> options = null,
             Action<HttpClient> clientOptions = null)
         {
             return SendAsync(new HttpRequestMessage(HttpMethod.Get, requestUri), expectedSpans, options, clientOptions);
@@ -97,7 +101,7 @@ namespace OpenTracing.Contrib.Tests.AspNetCore
 
                 Dispose();
             }
-            
+
             return responseString;
         }
 
@@ -259,6 +263,26 @@ namespace OpenTracing.Contrib.Tests.AspNetCore
             Assert.Single(logs);
             Assert.Equal("error", logs[0].Fields[LogFields.Event]);
             Assert.Equal("InvalidOperationException", logs[0].Fields[LogFields.ErrorKind]);
+        }
+
+        [Fact]
+        public async Task Creates_error_span_if_client_aborts()
+        {
+            await Assert.ThrowsAsync<TaskCanceledException>(() => GetAsync("/wait?delay=1000", clientOptions: client =>
+            {
+                client.Timeout = TimeSpan.FromMilliseconds(50);
+            }));
+
+            var finishedSpans = _tracer.FinishedSpans();
+            Assert.Single(finishedSpans);
+
+            var span = finishedSpans[0];
+            Assert.True(span.Tags[Tags.Error.Key] as bool?);
+
+            var logs = span.LogEntries;
+            Assert.Single(logs);
+            Assert.Equal("error", logs[0].Fields[LogFields.Event]);
+            Assert.Equal("TaskCanceledException", logs[0].Fields[LogFields.ErrorKind]);
         }
     }
 }
