@@ -15,7 +15,6 @@ Instrumented components: Outgoing HTTP calls, Entity Framework Core commands</De
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="2.0.0" />
     <PackageReference Include="Microsoft.Extensions.Options" Version="2.0.0" />
     <PackageReference Include="OpenTracing" Version="0.11.0" />
-    <PackageReference Include="System.Reactive" Version="3.1.1" />
   </ItemGroup>
 
   <ItemGroup>

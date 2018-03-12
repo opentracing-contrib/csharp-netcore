@@ -7,7 +7,7 @@ using OpenTracing.Contrib.NetCore.DiagnosticSubscribers;
 
 namespace OpenTracing.Contrib.NetCore
 {
-    public sealed class DiagnosticManager : IDisposable
+    public sealed class DiagnosticManager : IObserver<DiagnosticListener>, IDisposable
     {
         private readonly ILogger<DiagnosticManager> _logger;
         private readonly IEnumerable<DiagnosticSubscriber> _diagnosticSubscribers;
@@ -32,19 +32,28 @@ namespace OpenTracing.Contrib.NetCore
             if (_allListenersSubscription == null)
             {
                 _logger.LogTrace("Starting AllListeners subscription");
+                _allListenersSubscription = DiagnosticListener.AllListeners.Subscribe(this);
+            }
+        }
 
-                _allListenersSubscription = DiagnosticListener.AllListeners.Subscribe(listener =>
+        public void OnCompleted()
+        {
+        }
+
+        public void OnError(Exception error)
+        {
+        }
+
+        public void OnNext(DiagnosticListener listener)
+        {
+            foreach (var subscriber in _diagnosticSubscribers)
+            {
+                IDisposable subscription = subscriber.SubscribeIfMatch(listener);
+                if (subscription != null)
                 {
-                    foreach (var subscriber in _diagnosticSubscribers)
-                    {
-                        IDisposable subscription = subscriber.SubscribeIfMatch(listener);
-                        if (subscription != null)
-                        {
-                            _logger.LogTrace($"Subscriber '{subscriber.GetType().Name}' returned subscription for '{listener.Name}'");
-                            _subscriptions.Add(subscription);
-                        }
-                    }
-                });
+                    _logger.LogTrace($"Subscriber '{subscriber.GetType().Name}' returned subscription for '{listener.Name}'");
+                    _subscriptions.Add(subscription);
+                }
             }
         }
 
