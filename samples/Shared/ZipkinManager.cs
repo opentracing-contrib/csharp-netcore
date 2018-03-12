@@ -5,8 +5,8 @@ using Microsoft.Extensions.Logging;
 using OpenTracing.Tracer.Zipkin;
 using OpenTracing.Util;
 using zipkin4net;
+using zipkin4net.Propagation;
 using zipkin4net.Tracers.Zipkin;
-using zipkin4net.Transport;
 using zipkin4net.Transport.Http;
 
 namespace Shared
@@ -43,8 +43,7 @@ namespace Shared
             var otTracer = new OtTracer(
                serviceName,
                new AsyncLocalScopeManager(),
-               new ZipkinHttpTraceInjector(),
-               new ZipkinHttpTraceExtractor());
+               Propagations.B3String);
 
             GlobalTracer.Register(otTracer);
         }

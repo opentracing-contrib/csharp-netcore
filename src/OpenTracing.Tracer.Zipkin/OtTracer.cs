@@ -2,14 +2,14 @@ using System;
 using System.Linq;
 using OpenTracing.Propagation;
 using zipkin4net;
-using zipkin4net.Transport;
+using zipkin4net.Propagation;
 
 namespace OpenTracing.Tracer.Zipkin
 {
     public class OtTracer : ITracer
     {
-        private readonly ITraceInjector _traceInjector;
-        private readonly ITraceExtractor _traceExtractor;
+        private readonly IInjector<ITextMap> _injector;
+        private readonly IExtractor<ITextMap> _extractor;
 
         public IScopeManager ScopeManager { get; }
 
@@ -17,13 +17,16 @@ namespace OpenTracing.Tracer.Zipkin
 
         public string ServiceName { get; }
 
-        public OtTracer(string serviceName, IScopeManager scopeManager, ITraceInjector traceInjector, ITraceExtractor traceExtractor)
+        public OtTracer(string serviceName, IScopeManager scopeManager, IPropagation<string> propagation)
         {
             ServiceName = serviceName ?? throw new ArgumentNullException(nameof(serviceName));
             ScopeManager = scopeManager ?? throw new ArgumentNullException(nameof(scopeManager));
 
-            _traceInjector = traceInjector ?? throw new ArgumentNullException(nameof(traceInjector));
-            _traceExtractor = traceExtractor ?? throw new ArgumentNullException(nameof(traceExtractor));
+            if (propagation == null)
+                throw new ArgumentNullException(nameof(propagation));
+
+            _injector = propagation.Injector<ITextMap>((c, key, value) => c.Set(key, value));
+            _extractor = propagation.Extractor<ITextMap>((c, key) => c.Where(x => x.Key == key).Select(x => x.Value).FirstOrDefault());
         }
 
         public ISpanBuilder BuildSpan(string operationName)
@@ -34,21 +37,27 @@ namespace OpenTracing.Tracer.Zipkin
         public void Inject<TCarrier>(ISpanContext spanContext, IFormat<TCarrier> format, TCarrier carrier)
         {
             VerifySupportedFormat(format);
+
             ITextMap implCarrier = GetRealCarrier(carrier);
             Trace trace = GetRealSpanContext(spanContext).Trace;
-            _traceInjector.Inject(trace, implCarrier, (c, key, value) => c.Set(key, value));
+
+            _injector.Inject(trace.CurrentSpan, implCarrier);
         }
 
         public ISpanContext Extract<TCarrier>(IFormat<TCarrier> format, TCarrier carrier)
         {
             VerifySupportedFormat(format);
+
             ITextMap implCarrier = GetRealCarrier(carrier);
-            Trace trace = null;
-            if (!_traceExtractor.TryExtract(implCarrier, (c, key) => c.Where(x => x.Key == key).Select(x => x.Value).FirstOrDefault(), out trace))
+            
+            ITraceContext traceContext = _extractor.Extract(implCarrier);
+
+            if (traceContext == null)
             {
                 return null;
             }
-            return new OtSpanContext(trace);
+
+            return new OtSpanContext(Trace.CreateFromId(traceContext));
         }
 
         private static void VerifySupportedFormat<TCarrier>(IFormat<TCarrier> format)
