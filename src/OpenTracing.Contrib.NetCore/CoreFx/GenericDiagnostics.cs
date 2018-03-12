@@ -3,22 +3,22 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using OpenTracing.Contrib.NetCore.Configuration;
+using OpenTracing.Contrib.NetCore.Internal;
 using OpenTracing.Tag;
 
-namespace OpenTracing.Contrib.NetCore.DiagnosticSubscribers.CoreFx
+namespace OpenTracing.Contrib.NetCore.CoreFx
 {
     /// <summary>
     /// A <see cref="DiagnosticListener"/> subscriber that logs ALL events to <see cref="ITracer.ActiveSpan"/>.
     /// </summary>
-    public sealed class GenericDiagnosticSubscriber : DiagnosticSubscriber
+    internal sealed class GenericDiagnostics : DiagnosticSubscriber
     {
         private readonly GenericDiagnosticOptions _options;
 
-        public GenericDiagnosticSubscriber(ILoggerFactory loggerFactory, ITracer tracer, IOptions<CoreFxOptions> options)
+        public GenericDiagnostics(ILoggerFactory loggerFactory, ITracer tracer, IOptions<GenericDiagnosticOptions> options)
             : base(loggerFactory, tracer)
         {
-            _options = options?.Value?.GenericDiagnostic ?? throw new ArgumentNullException(nameof(options));
+            _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
         }
 
         public override IDisposable SubscribeIfMatch(DiagnosticListener diagnosticListener)
@@ -33,14 +33,14 @@ namespace OpenTracing.Contrib.NetCore.DiagnosticSubscribers.CoreFx
 
         private class GenericDiagnosticsSubscription : IObserver<KeyValuePair<string, object>>, IDisposable
         {
-            private readonly GenericDiagnosticSubscriber _subscriber;
+            private readonly GenericDiagnostics _subscriber;
             private readonly string _listenerName;
             private readonly HashSet<string> _ignoredEvents;
 
             private readonly IDisposable _subscription;
 
 
-            public GenericDiagnosticsSubscription(GenericDiagnosticSubscriber subscriber, DiagnosticListener diagnosticListener)
+            public GenericDiagnosticsSubscription(GenericDiagnostics subscriber, DiagnosticListener diagnosticListener)
             {
                 _subscriber = subscriber;
                 _listenerName = diagnosticListener.Name;

@@ -19,11 +19,11 @@ namespace Samples.OrdersApi
                 .UseUrls(Constants.OrdersUrl)
                 .ConfigureServices(services =>
                 {
+                    // Registers and starts Zipkin (see Shared.ZipkinService)
+                    services.AddZipkin();
+
                     // Enables OpenTracing instrumentation for ASP.NET Core, CoreFx, EF Core
                     services.AddOpenTracing();
-
-                    // Register Zipkin (see Startup.Configure for how it is started)
-                    services.AddSingleton<ZipkinManager>();
                 })
                 .Build();
         }

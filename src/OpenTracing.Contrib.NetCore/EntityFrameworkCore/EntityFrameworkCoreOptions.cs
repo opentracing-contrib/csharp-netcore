@@ -1,14 +1,13 @@
 ﻿using System;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 
-namespace OpenTracing.Contrib.NetCore.Configuration
+namespace OpenTracing.Contrib.NetCore.EntityFrameworkCore
 {
-
     public class EntityFrameworkCoreOptions
     {
         public const string DefaultComponent = "EFCore";
 
-        private string _componentName;
+        private string _componentName = DefaultComponent;
         private Func<CommandEventData, string> _operationNameResolver;
 
         /// <summary>
@@ -25,20 +24,17 @@ namespace OpenTracing.Contrib.NetCore.Configuration
         /// </summary>
         public Func<CommandEventData, string> OperationNameResolver
         {
-            get => _operationNameResolver;
-            set => _operationNameResolver = value ?? throw new ArgumentNullException(nameof(OperationNameResolver));
-        }
-
-        public EntityFrameworkCoreOptions()
-        {
-            // Default settings
-
-            ComponentName = DefaultComponent;
-
-            OperationNameResolver = (data) =>
+            get
             {
-                return "DB " + data.ExecuteMethod.ToString();
-            };
+                if (_operationNameResolver == null)
+                {
+                    // Default value may not be set in the constructor because this would fail
+                    // if the target application does not reference EFCore.
+                    _operationNameResolver = (data) => "DB " + data.ExecuteMethod.ToString();
+                }
+                return _operationNameResolver;
+            }
+            set => _operationNameResolver = value ?? throw new ArgumentNullException(nameof(OperationNameResolver));
         }
     }
 }

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Net.Http;
 
-namespace OpenTracing.Contrib.NetCore.DiagnosticSubscribers.CoreFx
+namespace OpenTracing.Contrib.NetCore.CoreFx
 {
     public class HttpHandlerDiagnosticOptions
     {

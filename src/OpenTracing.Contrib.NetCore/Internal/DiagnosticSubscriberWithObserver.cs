@@ -3,16 +3,17 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using Microsoft.Extensions.Logging;
 
-namespace OpenTracing.Contrib.NetCore.DiagnosticSubscribers
+namespace OpenTracing.Contrib.NetCore.Internal
 {
-    public abstract class DiagnosticSubscriberWithObserver : DiagnosticSubscriber, IObserver<KeyValuePair<string, object>>
+    internal abstract class DiagnosticSubscriberWithObserver : DiagnosticSubscriber, IObserver<KeyValuePair<string, object>>
     {
         /// <summary>
         /// The name of the <see cref="DiagnosticListener"/> that should be instrumented.
         /// </summary>
         protected abstract string ListenerName { get; }
 
-        protected DiagnosticSubscriberWithObserver(ILoggerFactory loggerFactory, ITracer tracer) : base(loggerFactory, tracer)
+        protected DiagnosticSubscriberWithObserver(ILoggerFactory loggerFactory, ITracer tracer)
+            : base(loggerFactory, tracer)
         {
         }
 

@@ -4,6 +4,7 @@ using Microsoft.Extensions.Hosting;
 using OpenTracing;
 using OpenTracing.Contrib.NetCore;
 using OpenTracing.Contrib.NetCore.Configuration;
+using OpenTracing.Contrib.NetCore.Internal;
 using OpenTracing.Util;
 
 namespace Microsoft.Extensions.DependencyInjection

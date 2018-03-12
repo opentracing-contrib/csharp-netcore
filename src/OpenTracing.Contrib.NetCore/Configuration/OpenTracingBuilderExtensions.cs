@@ -1,52 +1,43 @@
 using System;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using OpenTracing.Contrib.NetCore.Configuration;
-using OpenTracing.Contrib.NetCore.DiagnosticSubscribers;
-using OpenTracing.Contrib.NetCore.DiagnosticSubscribers.AspNetCore;
-using OpenTracing.Contrib.NetCore.DiagnosticSubscribers.CoreFx;
-using OpenTracing.Contrib.NetCore.DiagnosticSubscribers.EntityFrameworkCore;
+using OpenTracing.Contrib.NetCore.AspNetCore;
+using OpenTracing.Contrib.NetCore.CoreFx;
+using OpenTracing.Contrib.NetCore.EntityFrameworkCore;
+using OpenTracing.Contrib.NetCore.Internal;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
     public static class OpenTracingBuilderExtensions
     {
-        /// <summary>
-        /// Adds instrumentation for ASP.NET Core.
-        /// </summary>
-        public static IOpenTracingBuilder AddAspNetCore(this IOpenTracingBuilder builder, Action<AspNetCoreOptions> options = null)
+        internal static IOpenTracingBuilder AddDiagnosticSubscriber<TDiagnosticSubscriber>(this IOpenTracingBuilder builder)
+            where TDiagnosticSubscriber : DiagnosticSubscriber
         {
             if (builder == null)
                 throw new ArgumentNullException(nameof(builder));
 
-            builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<DiagnosticSubscriber, MvcDiagnosticSubscriber>());
-            builder.Services.Configure<CoreFxOptions>(x =>
-            {
-                x.GenericDiagnostic.IgnoreEvent(MvcDiagnosticSubscriber.DiagnosticListenerName, MvcDiagnosticSubscriber.EventBeforeAction);
-                x.GenericDiagnostic.IgnoreEvent(MvcDiagnosticSubscriber.DiagnosticListenerName, MvcDiagnosticSubscriber.EventAfterAction);
-                x.GenericDiagnostic.IgnoreEvent(MvcDiagnosticSubscriber.DiagnosticListenerName, MvcDiagnosticSubscriber.EventBeforeActionResult);
-                x.GenericDiagnostic.IgnoreEvent(MvcDiagnosticSubscriber.DiagnosticListenerName, MvcDiagnosticSubscriber.EventAfterActionResult);
-            });
+            builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<DiagnosticSubscriber, TDiagnosticSubscriber>());
 
-            builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<DiagnosticSubscriber, RequestDiagnosticSubscriber>());
-            builder.Services.Configure<CoreFxOptions>(x =>
-            {
-                x.GenericDiagnostic.IgnoreEvent(RequestDiagnosticSubscriber.DiagnosticListenerName, RequestDiagnosticSubscriber.EventActivity);
-                x.GenericDiagnostic.IgnoreEvent(RequestDiagnosticSubscriber.DiagnosticListenerName, RequestDiagnosticSubscriber.EventActivityStart);
-                x.GenericDiagnostic.IgnoreEvent(RequestDiagnosticSubscriber.DiagnosticListenerName, RequestDiagnosticSubscriber.EventActivityStop);
-                x.GenericDiagnostic.IgnoreEvent(RequestDiagnosticSubscriber.DiagnosticListenerName, RequestDiagnosticSubscriber.EventUnhandledException);
-
-                // Deprecated Hosting events
-                x.GenericDiagnostic.IgnoreEvent(RequestDiagnosticSubscriber.DiagnosticListenerName, "Microsoft.AspNetCore.Hosting.BeginRequest");
-                x.GenericDiagnostic.IgnoreEvent(RequestDiagnosticSubscriber.DiagnosticListenerName, "Microsoft.AspNetCore.Hosting.EndRequest");
-            });
-
-            return ConfigureAspNetCore(builder, options);
+            return builder;
         }
 
         /// <summary>
-        /// Configuration options for the instrumentation of ASP.NET Core.
+        /// Adds instrumentation for ASP.NET Core.
         /// </summary>
-        public static IOpenTracingBuilder ConfigureAspNetCore(this IOpenTracingBuilder builder, Action<AspNetCoreOptions> options)
+        public static IOpenTracingBuilder AddAspNetCore(this IOpenTracingBuilder builder)
+        {
+            if (builder == null)
+                throw new ArgumentNullException(nameof(builder));
+
+            builder.AddDiagnosticSubscriber<MvcDiagnostics>();
+            builder.ConfigureGenericDiagnostics(MvcDiagnostics.GenericDiagnosticsExclusions);
+
+            builder.AddDiagnosticSubscriber<RequestDiagnostics>();
+            builder.ConfigureGenericDiagnostics(RequestDiagnostics.GenericDiagnosticsExclusions);
+
+            return builder;
+        }
+
+        public static IOpenTracingBuilder ConfigureAspNetCoreRequest(this IOpenTracingBuilder builder, Action<RequestDiagnosticOptions> options)
         {
             if (builder == null)
                 throw new ArgumentNullException(nameof(builder));
@@ -62,27 +53,20 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <summary>
         /// Adds instrumentation for the .NET framework BCL.
         /// </summary>
-        public static IOpenTracingBuilder AddCoreFx(this IOpenTracingBuilder builder, Action<CoreFxOptions> options = null)
+        public static IOpenTracingBuilder AddCoreFx(this IOpenTracingBuilder builder)
         {
             if (builder == null)
                 throw new ArgumentNullException(nameof(builder));
 
-            builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<DiagnosticSubscriber, GenericDiagnosticSubscriber>());
+            builder.AddDiagnosticSubscriber<GenericDiagnostics>();
 
-            builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<DiagnosticSubscriber, HttpHandlerDiagnosticSubscriber>());
-            builder.Services.Configure<CoreFxOptions>(x =>
-            {
-                x.GenericDiagnostic.IgnoredListenerNames.Add(HttpHandlerDiagnosticSubscriber.DiagnosticListenerName);
-            });
+            builder.AddDiagnosticSubscriber<HttpHandlerDiagnostics>();
+            builder.ConfigureGenericDiagnostics(HttpHandlerDiagnostics.GenericDiagnosticsExclusions);
 
-            return ConfigureCoreFx(builder, options);
+            return builder;
         }
 
-        /// <summary>
-        /// Configuration options for the instrumentation of the .NET framework BCL.
-        /// </summary>
-        /// <seealso cref="AddCoreFx(IOpenTracingBuilder, Action{CoreFxOptions})"/>
-        public static IOpenTracingBuilder ConfigureCoreFx(this IOpenTracingBuilder builder, Action<CoreFxOptions> options)
+        public static IOpenTracingBuilder ConfigureGenericDiagnostics(this IOpenTracingBuilder builder, Action<GenericDiagnosticOptions> options)
         {
             if (builder == null)
                 throw new ArgumentNullException(nameof(builder));
@@ -98,26 +82,20 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <summary>
         /// Adds instrumentation for Entity Framework Core.
         /// </summary>
-        public static IOpenTracingBuilder AddEntityFrameworkCore(this IOpenTracingBuilder builder, Action<EntityFrameworkCoreOptions> options = null)
+        public static IOpenTracingBuilder AddEntityFrameworkCore(this IOpenTracingBuilder builder)
         {
             if (builder == null)
                 throw new ArgumentNullException(nameof(builder));
 
-            builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<DiagnosticSubscriber, EFCoreDiagnosticSubscriber>());
-            builder.Services.Configure<CoreFxOptions>(x =>
-            {
-                x.GenericDiagnostic.IgnoreEvent(EFCoreDiagnosticSubscriber.DiagnosticListenerName, EFCoreDiagnosticSubscriber.EventOnCommandExecuting);
-                x.GenericDiagnostic.IgnoreEvent(EFCoreDiagnosticSubscriber.DiagnosticListenerName, EFCoreDiagnosticSubscriber.EventOnCommandExecuted);
-                x.GenericDiagnostic.IgnoreEvent(EFCoreDiagnosticSubscriber.DiagnosticListenerName, EFCoreDiagnosticSubscriber.EventOnCommandError);
-            });
+            builder.AddDiagnosticSubscriber<EntityFrameworkCoreDiagnostics>();
+            builder.ConfigureGenericDiagnostics(EntityFrameworkCoreDiagnostics.GenericDiagnosticsExclusions);
 
-            return ConfigureEntityFrameworkCore(builder, options);
+            return builder;
         }
 
         /// <summary>
         /// Configuration options for the instrumentation of Entity Framework Core.
         /// </summary>
-        /// <seealso cref="AddEntityFrameworkCore(IOpenTracingBuilder, Action{EntityFrameworkCoreOptions})"/>
         public static IOpenTracingBuilder ConfigureEntityFrameworkCore(this IOpenTracingBuilder builder, Action<EntityFrameworkCoreOptions> options)
         {
             if (builder == null)

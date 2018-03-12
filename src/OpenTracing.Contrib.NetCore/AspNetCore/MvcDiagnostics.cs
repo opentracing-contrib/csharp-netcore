@@ -1,19 +1,29 @@
+using System;
 using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.Extensions.Logging;
+using OpenTracing.Contrib.NetCore.CoreFx;
 using OpenTracing.Contrib.NetCore.Internal;
 using OpenTracing.Tag;
 
-namespace OpenTracing.Contrib.NetCore.DiagnosticSubscribers.AspNetCore
+namespace OpenTracing.Contrib.NetCore.AspNetCore
 {
-    internal sealed class MvcDiagnosticSubscriber : DiagnosticSubscriberWithObserver
+    internal sealed class MvcDiagnostics : DiagnosticSubscriberWithObserver
     {
-        // Events
         public const string DiagnosticListenerName = "Microsoft.AspNetCore";
+
         public const string EventBeforeAction = "Microsoft.AspNetCore.Mvc.BeforeAction";
         public const string EventAfterAction = "Microsoft.AspNetCore.Mvc.AfterAction";
         public const string EventBeforeActionResult = "Microsoft.AspNetCore.Mvc.BeforeActionResult";
         public const string EventAfterActionResult = "Microsoft.AspNetCore.Mvc.AfterActionResult";
+
+        public static readonly Action<GenericDiagnosticOptions> GenericDiagnosticsExclusions = options =>
+        {
+            options.IgnoreEvent(DiagnosticListenerName, EventBeforeAction);
+            options.IgnoreEvent(DiagnosticListenerName, EventAfterAction);
+            options.IgnoreEvent(DiagnosticListenerName, EventBeforeActionResult);
+            options.IgnoreEvent(DiagnosticListenerName, EventAfterActionResult);
+        };
 
         private const string ActionComponent = "AspNetCore.MvcAction";
         private const string ActionTagActionName = "action";
@@ -22,14 +32,12 @@ namespace OpenTracing.Contrib.NetCore.DiagnosticSubscribers.AspNetCore
         private const string ResultComponent = "AspNetCore.MvcResult";
         private const string ResultTagType = "result.type";
 
-        private readonly PropertyFetcher _beforeAction_HttpContextFetcher = new PropertyFetcher("httpContext");
         private readonly PropertyFetcher _beforeAction_ActionDescriptorFetcher = new PropertyFetcher("actionDescriptor");
         private readonly PropertyFetcher _beforeActionResult_ResultFetcher = new PropertyFetcher("result");
-        
 
         protected override string ListenerName => DiagnosticListenerName;
 
-        public MvcDiagnosticSubscriber(ILoggerFactory loggerFactory, ITracer tracer)
+        public MvcDiagnostics(ILoggerFactory loggerFactory, ITracer tracer)
             : base(loggerFactory, tracer)
         {
         }
@@ -49,7 +57,7 @@ namespace OpenTracing.Contrib.NetCore.DiagnosticSubscribers.AspNetCore
                         string operationName = controllerActionDescriptor != null
                             ? $"Action {controllerActionDescriptor.ControllerTypeInfo.FullName}/{controllerActionDescriptor.ActionName}"
                             : $"Action {actionDescriptor.DisplayName}";
-                        
+
                         Tracer.BuildSpan(operationName)
                             .WithTag(Tags.Component.Key, ActionComponent)
                             .WithTag(ActionTagControllerName, controllerActionDescriptor?.ControllerTypeInfo.FullName)

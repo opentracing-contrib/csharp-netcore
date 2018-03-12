@@ -2,15 +2,18 @@
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Http;
 
-namespace OpenTracing.Contrib.NetCore.DiagnosticSubscribers.AspNetCore
+namespace OpenTracing.Contrib.NetCore.AspNetCore
 {
-
     public class RequestDiagnosticOptions
     {
         public const string DefaultComponent = "HttpIn";
 
-        private string _componentName;
+        // Variables are lazily instantiated to prevent the app from crashing if the required assemblies are not referenced.
+
+        private string _componentName = DefaultComponent;
+        private List<Func<HttpContext, bool>> _ignorePatterns;
         private Func<HttpContext, string> _operationNameResolver;
+
 
         /// <summary>
         /// Allows changing the "component" tag of created spans.
@@ -26,7 +29,17 @@ namespace OpenTracing.Contrib.NetCore.DiagnosticSubscribers.AspNetCore
         /// <para/>
         /// If any delegate in the list returns <c>true</c>, the request will be ignored.
         /// </summary>
-        public List<Func<HttpContext, bool>> IgnorePatterns { get; } = new List<Func<HttpContext, bool>>();
+        public List<Func<HttpContext, bool>> IgnorePatterns
+        {
+            get
+            {
+                if (_ignorePatterns == null)
+                {
+                    _ignorePatterns = new List<Func<HttpContext, bool>>();
+                }
+                return _ignorePatterns;
+            }
+        }
 
         /// <summary>
         /// A delegates that defines from which requests tracing headers are extracted.
@@ -38,7 +51,14 @@ namespace OpenTracing.Contrib.NetCore.DiagnosticSubscribers.AspNetCore
         /// </summary>
         public Func<HttpContext, string> OperationNameResolver
         {
-            get => _operationNameResolver;
+            get
+            {
+                if (_operationNameResolver == null)
+                {
+                    _operationNameResolver = (httpContext) => "HTTP " + httpContext.Request.Method;
+                }
+                return _operationNameResolver;
+            }
             set => _operationNameResolver = value ?? throw new ArgumentNullException(nameof(OperationNameResolver));
         }
 
@@ -46,17 +66,5 @@ namespace OpenTracing.Contrib.NetCore.DiagnosticSubscribers.AspNetCore
         /// Allows the modification of the created span to e.g. add further tags.
         /// </summary>
         public Action<ISpan, HttpContext> OnRequest { get; set; }
-
-        public RequestDiagnosticOptions()
-        {
-            // Default settings
-
-            ComponentName = DefaultComponent;
-
-            OperationNameResolver = (httpContext) =>
-            {
-                return "HTTP " + httpContext.Request.Method;
-            };
-        }
     }
 }

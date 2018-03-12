@@ -2,9 +2,9 @@
 using System.Diagnostics;
 using Microsoft.Extensions.Logging;
 
-namespace OpenTracing.Contrib.NetCore.DiagnosticSubscribers
+namespace OpenTracing.Contrib.NetCore.Internal
 {
-    public abstract class DiagnosticSubscriber
+    internal abstract class DiagnosticSubscriber
     {
         protected ILogger Logger { get; }
 
@@ -26,7 +26,7 @@ namespace OpenTracing.Contrib.NetCore.DiagnosticSubscribers
             IsLogLevelTraceEnabled = Logger.IsEnabled(LogLevel.Trace);
         }
 
-        public virtual bool IsEnabled()
+        public virtual bool IsSubscriberEnabled()
         {
             return true;
         }

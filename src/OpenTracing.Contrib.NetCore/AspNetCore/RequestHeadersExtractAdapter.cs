@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using Microsoft.AspNetCore.Http;
 using OpenTracing.Propagation;
 
-namespace OpenTracing.Contrib.NetCore.DiagnosticSubscribers.AspNetCore
+namespace OpenTracing.Contrib.NetCore.AspNetCore
 {
     internal sealed class RequestHeadersExtractAdapter : ITextMap
     {

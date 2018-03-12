@@ -3,18 +3,18 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using OpenTracing.Contrib.NetCore.Configuration;
+using OpenTracing.Contrib.NetCore.CoreFx;
 using OpenTracing.Contrib.NetCore.Internal;
 using OpenTracing.Propagation;
 using OpenTracing.Tag;
 
-namespace OpenTracing.Contrib.NetCore.DiagnosticSubscribers.AspNetCore
+namespace OpenTracing.Contrib.NetCore.AspNetCore
 {
     /// <summary>
     /// Instruments incoming HTTP requests.
     /// <para/>See https://github.com/aspnet/Hosting/blob/dev/src/Microsoft.AspNetCore.Hosting/Internal/HostingApplicationDiagnostics.cs
     /// </summary>
-    internal sealed class RequestDiagnosticSubscriber : DiagnosticSubscriberWithObserver
+    internal sealed class RequestDiagnostics : DiagnosticSubscriberWithObserver
     {
         public const string DiagnosticListenerName = "Microsoft.AspNetCore";
 
@@ -22,6 +22,18 @@ namespace OpenTracing.Contrib.NetCore.DiagnosticSubscribers.AspNetCore
         public const string EventActivityStart = EventActivity + ".Start";
         public const string EventActivityStop = EventActivity + ".Stop";
         public const string EventUnhandledException = "Microsoft.AspNetCore.Hosting.UnhandledException";
+
+        public static readonly Action<GenericDiagnosticOptions> GenericDiagnosticsExclusions = options =>
+        {
+            options.IgnoreEvent(DiagnosticListenerName, EventActivity);
+            options.IgnoreEvent(DiagnosticListenerName, EventActivityStart);
+            options.IgnoreEvent(DiagnosticListenerName, EventActivityStop);
+            options.IgnoreEvent(DiagnosticListenerName, EventUnhandledException);
+
+            // Deprecated Hosting events
+            options.IgnoreEvent(DiagnosticListenerName, "Microsoft.AspNetCore.Hosting.BeginRequest");
+            options.IgnoreEvent(DiagnosticListenerName, "Microsoft.AspNetCore.Hosting.EndRequest");
+        };
 
         private readonly PropertyFetcher _activityStart_HttpContextFetcher = new PropertyFetcher("HttpContext");
         private readonly PropertyFetcher _activityStop_HttpContextFetcher = new PropertyFetcher("HttpContext");
@@ -31,10 +43,10 @@ namespace OpenTracing.Contrib.NetCore.DiagnosticSubscribers.AspNetCore
 
         protected override string ListenerName => DiagnosticListenerName;
 
-        public RequestDiagnosticSubscriber(ILoggerFactory loggerFactory, ITracer tracer, IOptions<AspNetCoreOptions> options)
+        public RequestDiagnostics(ILoggerFactory loggerFactory, ITracer tracer, IOptions<RequestDiagnosticOptions> options)
             : base(loggerFactory, tracer)
         {
-            _options = options?.Value?.RequestDiagnostic ?? throw new ArgumentNullException(nameof(options));
+            _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
         }
 
         protected override void OnNextCore(string eventName, object arg)

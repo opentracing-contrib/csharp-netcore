@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using OpenTracing.Contrib.NetCore.Configuration;
+using OpenTracing.Contrib.NetCore.AspNetCore;
 using OpenTracing.Mock;
 using OpenTracing.Tag;
 using Xunit;
@@ -31,7 +31,7 @@ namespace OpenTracing.Contrib.NetCore.Tests.AspNetCore
             _tracer = new MockTracer();
         }
 
-        private void StartServer(Action<AspNetCoreOptions> aspNetCoreOptions = null)
+        private void StartServer(Action<RequestDiagnosticOptions> diagnosticOptions = null)
         {
             _server = new TestServer(new WebHostBuilder()
                 .ConfigureServices((webHostBuilderContext, services) =>
@@ -39,7 +39,8 @@ namespace OpenTracing.Contrib.NetCore.Tests.AspNetCore
                     services.AddSingleton<ITracer>(_tracer);
 
                     services.AddOpenTracingCoreServices()
-                        .AddAspNetCore(aspNetCoreOptions);
+                        .AddAspNetCore()
+                        .ConfigureAspNetCoreRequest(diagnosticOptions);
                 })
                 .ConfigureLogging(logging =>
                 {
@@ -70,13 +71,13 @@ namespace OpenTracing.Contrib.NetCore.Tests.AspNetCore
             _client = _server.CreateClient();
         }
 
-        private Task<string> GetAsync(string requestUri, int expectedSpans = 1, Action<AspNetCoreOptions> options = null,
+        private Task<string> GetAsync(string requestUri, int expectedSpans = 1, Action<RequestDiagnosticOptions> options = null,
             Action<HttpClient> clientOptions = null)
         {
             return SendAsync(new HttpRequestMessage(HttpMethod.Get, requestUri), expectedSpans, options, clientOptions);
         }
 
-        private async Task<string> SendAsync(HttpRequestMessage request, int expectedSpans = 1, Action<AspNetCoreOptions> options = null,
+        private async Task<string> SendAsync(HttpRequestMessage request, int expectedSpans = 1, Action<RequestDiagnosticOptions> options = null,
             Action<HttpClient> clientOptions = null)
         {
             StartServer(options);
@@ -194,7 +195,7 @@ namespace OpenTracing.Contrib.NetCore.Tests.AspNetCore
 
             await SendAsync(request, options: options =>
             {
-                options.RequestDiagnostic.ExtractEnabled = context => !context.Request.Headers.ContainsKey("ignore");
+                options.ExtractEnabled = context => !context.Request.Headers.ContainsKey("ignore");
             });
 
             var finishedSpans = _tracer.FinishedSpans();
@@ -212,7 +213,7 @@ namespace OpenTracing.Contrib.NetCore.Tests.AspNetCore
 
             await SendAsync(request, options: options =>
             {
-                options.RequestDiagnostic.IgnorePatterns.Add(context => context.Request.Headers.ContainsKey("ignore"));
+                options.IgnorePatterns.Add(context => context.Request.Headers.ContainsKey("ignore"));
             });
 
             Assert.Empty(_tracer.FinishedSpans());
@@ -223,7 +224,7 @@ namespace OpenTracing.Contrib.NetCore.Tests.AspNetCore
         {
             await GetAsync("/foo", options: options =>
             {
-                options.RequestDiagnostic.OperationNameResolver = _ => "test";
+                options.OperationNameResolver = _ => "test";
             });
 
             var finishedSpans = _tracer.FinishedSpans();
@@ -240,7 +241,7 @@ namespace OpenTracing.Contrib.NetCore.Tests.AspNetCore
 
             await GetAsync("/foo", options: options =>
             {
-                options.RequestDiagnostic.OnRequest = (_, __) => onRequestCalled = true;
+                options.OnRequest = (_, __) => onRequestCalled = true;
             });
 
             await GetAsync("/foo");

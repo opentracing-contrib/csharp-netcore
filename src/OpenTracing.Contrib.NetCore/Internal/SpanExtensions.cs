@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using OpenTracing.Tag;
 
-namespace OpenTracing.Contrib.NetCore
+namespace OpenTracing.Contrib.NetCore.Internal
 {
-    public static class SpanExtensions
+    internal static class SpanExtensions
     {
         /// <summary>
         /// Sets the <see cref="Tags.Error"/> tag and adds information about the <paramref name="exception"/>

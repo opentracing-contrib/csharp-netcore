@@ -2,12 +2,13 @@ using System;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using OpenTracing.Contrib.NetCore.Configuration;
+using OpenTracing.Contrib.NetCore.CoreFx;
+using OpenTracing.Contrib.NetCore.Internal;
 using OpenTracing.Tag;
 
-namespace OpenTracing.Contrib.NetCore.DiagnosticSubscribers.EntityFrameworkCore
+namespace OpenTracing.Contrib.NetCore.EntityFrameworkCore
 {
-    internal sealed class EFCoreDiagnosticSubscriber : DiagnosticSubscriberWithObserver
+    internal sealed class EntityFrameworkCoreDiagnostics : DiagnosticSubscriberWithObserver
     {
         // https://github.com/aspnet/EntityFrameworkCore/blob/dev/src/EFCore/DbLoggerCategory.cs
         public const string DiagnosticListenerName = "Microsoft.EntityFrameworkCore";
@@ -16,6 +17,13 @@ namespace OpenTracing.Contrib.NetCore.DiagnosticSubscribers.EntityFrameworkCore
         public const string EventOnCommandExecuted = DiagnosticListenerName + ".Database.Command.CommandExecuted";
         public const string EventOnCommandError = DiagnosticListenerName + ".Database.Command.CommandError";
 
+        public static readonly Action<GenericDiagnosticOptions> GenericDiagnosticsExclusions = options =>
+        {
+            options.IgnoreEvent(DiagnosticListenerName, EventOnCommandExecuting);
+            options.IgnoreEvent(DiagnosticListenerName, EventOnCommandExecuted);
+            options.IgnoreEvent(DiagnosticListenerName, EventOnCommandError);
+        };
+
         private const string TagMethod = "db.method";
         private const string TagIsAsync = "db.async";
 
@@ -23,10 +31,15 @@ namespace OpenTracing.Contrib.NetCore.DiagnosticSubscribers.EntityFrameworkCore
 
         protected override string ListenerName => DiagnosticListenerName;
 
-        public EFCoreDiagnosticSubscriber(ILoggerFactory loggerFactory, ITracer tracer, IOptions<EntityFrameworkCoreOptions> options)
+        public EntityFrameworkCoreDiagnostics(ILoggerFactory loggerFactory, ITracer tracer, IOptions<EntityFrameworkCoreOptions> options)
             : base(loggerFactory, tracer)
         {
             _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
+        }
+
+        public override bool IsSubscriberEnabled()
+        {
+            return true;
         }
 
         protected override void OnNextCore(string eventName, object untypedArg)

@@ -3,19 +3,18 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using OpenTracing.Contrib.NetCore.Configuration;
 using OpenTracing.Contrib.NetCore.Internal;
 using OpenTracing.Propagation;
 using OpenTracing.Tag;
 
-namespace OpenTracing.Contrib.NetCore.DiagnosticSubscribers.CoreFx
+namespace OpenTracing.Contrib.NetCore.CoreFx
 {
     /// <summary>
     /// Instruments outgoing HTTP calls that use <see cref="HttpClientHandler"/>.
     /// <para/>See https://github.com/dotnet/corefx/blob/master/src/System.Net.Http/src/System/Net/Http/DiagnosticsHandler.cs
     /// <para/>and https://github.com/dotnet/corefx/blob/master/src/System.Net.Http/src/System/Net/Http/DiagnosticsHandlerLoggingStrings.cs
     /// </summary>
-    internal sealed class HttpHandlerDiagnosticSubscriber : DiagnosticSubscriberWithObserver
+    internal sealed class HttpHandlerDiagnostics : DiagnosticSubscriberWithObserver
     {
         public const string DiagnosticListenerName = "HttpHandlerDiagnosticListener";
 
@@ -23,6 +22,11 @@ namespace OpenTracing.Contrib.NetCore.DiagnosticSubscribers.CoreFx
         public const string EventActivityStart = EventActivity + ".Start";
         public const string EventActivityStop = EventActivity + ".Stop";
         public const string EventException = "System.Net.Http.Exception";
+
+        public static readonly Action<GenericDiagnosticOptions> GenericDiagnosticsExclusions = options =>
+        {
+            options.IgnoredListenerNames.Add(DiagnosticListenerName);
+        };
 
         private const string PropertiesKey = "ot-Span";
 
@@ -37,10 +41,10 @@ namespace OpenTracing.Contrib.NetCore.DiagnosticSubscribers.CoreFx
 
         protected override string ListenerName => DiagnosticListenerName;
 
-        public HttpHandlerDiagnosticSubscriber(ILoggerFactory loggerFactory, ITracer tracer, IOptions<CoreFxOptions> options)
+        public HttpHandlerDiagnostics(ILoggerFactory loggerFactory, ITracer tracer, IOptions<HttpHandlerDiagnosticOptions> options)
             : base(loggerFactory, tracer)
         {
-            _options = options?.Value?.HttpHandlerDiagnostic ?? throw new ArgumentNullException(nameof(options));
+            _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
         }
 
         protected override void OnNextCore(string eventName, object arg)
@@ -83,10 +87,11 @@ namespace OpenTracing.Contrib.NetCore.DiagnosticSubscribers.CoreFx
                 case EventException:
                     {
                         var request = (HttpRequestMessage)_exception_RequestFetcher.Fetch(arg);
-                        var exception = (Exception)_exception_ExceptionFetcher.Fetch(arg);
 
                         if (request.Properties.TryGetValue(PropertiesKey, out object objSpan) && objSpan is ISpan span)
                         {
+                            var exception = (Exception)_exception_ExceptionFetcher.Fetch(arg);
+
                             span.SetException(exception);
                         }
                     }
@@ -95,11 +100,12 @@ namespace OpenTracing.Contrib.NetCore.DiagnosticSubscribers.CoreFx
                 case EventActivityStop:
                     {
                         var request = (HttpRequestMessage)_activityStop_RequestFetcher.Fetch(arg);
-                        var response = (HttpResponseMessage)_activityStop_ResponseFetcher.Fetch(arg);
-                        var requestTaskStatus = (TaskStatus)_activityStop_RequestTaskStatusFetcher.Fetch(arg);
 
                         if (request.Properties.TryGetValue(PropertiesKey, out object objSpan) && objSpan is ISpan span)
                         {
+                            var response = (HttpResponseMessage)_activityStop_ResponseFetcher.Fetch(arg);
+                            var requestTaskStatus = (TaskStatus)_activityStop_RequestTaskStatusFetcher.Fetch(arg);
+
                             if (response != null)
                             {
                                 span.SetTag(Tags.HttpStatus.Key, (int)response.StatusCode);

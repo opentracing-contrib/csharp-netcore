@@ -2,13 +2,14 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
+using OpenTracing.Contrib.NetCore.Internal;
 
 namespace OpenTracing.Contrib.NetCore
 {
     /// <summary>
     /// Starts and stops all OpenTracing instrumentation components.
     /// </summary>
-    public class InstrumentationService : IHostedService
+    internal class InstrumentationService : IHostedService
     {
         private readonly DiagnosticManager _diagnosticsManager;
 

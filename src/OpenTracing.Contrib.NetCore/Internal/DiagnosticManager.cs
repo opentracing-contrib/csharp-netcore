@@ -3,11 +3,10 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using Microsoft.Extensions.Logging;
-using OpenTracing.Contrib.NetCore.DiagnosticSubscribers;
 
-namespace OpenTracing.Contrib.NetCore
+namespace OpenTracing.Contrib.NetCore.Internal
 {
-    public sealed class DiagnosticManager : IObserver<DiagnosticListener>, IDisposable
+    internal sealed class DiagnosticManager : IObserver<DiagnosticListener>, IDisposable
     {
         private readonly ILogger<DiagnosticManager> _logger;
         private readonly IEnumerable<DiagnosticSubscriber> _diagnosticSubscribers;
@@ -24,7 +23,7 @@ namespace OpenTracing.Contrib.NetCore
                 throw new ArgumentNullException(nameof(diagnosticSubscribers));
 
             _logger = loggerFactory.CreateLogger<DiagnosticManager>();
-            _diagnosticSubscribers = diagnosticSubscribers.Where(x => x.IsEnabled());
+            _diagnosticSubscribers = diagnosticSubscribers.Where(x => x.IsSubscriberEnabled());
         }
 
         public void Start()

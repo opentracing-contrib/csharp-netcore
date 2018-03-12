@@ -1,20 +1,13 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Shared;
 
 namespace TrafficGenerator
 {
     class Program
     {
-        static void StartTasks(IServiceProvider serviceProvider)
-        {
-            serviceProvider.GetRequiredService<ZipkinManager>().Start();
-        }
-
         static async Task Main(string[] args)
         {
             var builder = new HostBuilder()
@@ -30,11 +23,12 @@ namespace TrafficGenerator
                 })
                 .ConfigureServices((hostContext, services) =>
                 {
+                    // Registers and starts Zipkin (see Shared.ZipkinService)
+                    services.AddZipkin();
+
                     services.AddOpenTracing();
 
                     services.AddSingleton<IHostedService, Worker>();
-
-                    services.AddSingleton<ZipkinManager>();
                 });
 
             await builder.RunConsoleAsync();
