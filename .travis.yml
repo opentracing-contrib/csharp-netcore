@@ -15,4 +15,4 @@ env:
 
 script:
   - dotnet build -c Release
-  - dotnet test test/OpenTracing.Contrib.Tests/OpenTracing.Contrib.Tests.csproj -c Release --no-build
+  - dotnet test test/OpenTracing.Contrib.NetCore.Tests/OpenTracing.Contrib.NetCore.Tests.csproj -c Release --no-build

@@ -21,15 +21,23 @@ namespace TrafficGenerator
         {
             try
             {
-                _logger.LogInformation("Hello world");
-
                 HttpClient httpClient = new HttpClient();
                 httpClient.BaseAddress = new Uri(Constants.CustomersUrl);
 
-                HttpResponseMessage response = await httpClient.GetAsync("api/Customers");
+                while (!stoppingToken.IsCancellationRequested)
+                {
+                    _logger.LogInformation("Requesting customers");
 
-                _logger.LogInformation($"Response was '{response.StatusCode}'");
+                    HttpResponseMessage response = await httpClient.GetAsync("customers");
 
+                    _logger.LogInformation($"Response was '{response.StatusCode}'");
+
+                    await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
+                }
+            }
+            catch (TaskCanceledException)
+            {
+                /* Application should be stopped -> no-op */
             }
             catch (Exception ex)
             {
