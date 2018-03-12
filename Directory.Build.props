@@ -3,11 +3,11 @@
     <VersionPrefix>0.1.0</VersionPrefix>
     <Authors>Christian Weiss</Authors>
     <!-- <PackageIconUrl>https://avatars0.githubusercontent.com/u/15482765</PackageIconUrl> -->
-    <PackageProjectUrl>https://github.com/opentracing-contrib/csharp-aspnetcore</PackageProjectUrl>
-    <PackageLicenseUrl>https://raw.githubusercontent.com/opentracing-contrib/csharp-aspnetcore/master/LICENSE</PackageLicenseUrl>
-    <PackageReleaseNotes>https://github.com/opentracing-contrib/csharp-aspnetcore/releases</PackageReleaseNotes>
+    <PackageProjectUrl>https://github.com/opentracing-contrib/csharp-netcore</PackageProjectUrl>
+    <PackageLicenseUrl>https://raw.githubusercontent.com/opentracing-contrib/csharp-netcore/master/LICENSE</PackageLicenseUrl>
+    <PackageReleaseNotes>https://github.com/opentracing-contrib/csharp-netcore/releases</PackageReleaseNotes>
     <RepositoryType>git</RepositoryType>
-    <RepositoryUrl>git://github.com/opentracing-contrib/csharp-aspnetcore</RepositoryUrl>
+    <RepositoryUrl>git://github.com/opentracing-contrib/csharp-netcore</RepositoryUrl>
 
     <!-- Projects that should generate nupkg files override this -->
     <IsPackable>false</IsPackable>

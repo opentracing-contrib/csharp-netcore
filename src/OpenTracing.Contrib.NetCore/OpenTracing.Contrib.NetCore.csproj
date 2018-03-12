@@ -4,7 +4,7 @@
     <TargetFrameworks>netcoreapp2.0</TargetFrameworks>
     <IsPackable>true</IsPackable>
     <Description>Adds OpenTracing instrumentation for .NET Core apps that use the `Microsoft.Extensions.*` stack.
-Instrumented components: Outgoing HTTP calls, Entity Framework Core commands</Description>
+Instrumented components: DiagnosticSource events, Outgoing HTTP calls, ASP.NET Core requests, Entity Framework Core commands</Description>
     <PackageTags>opentracing;distributed-tracing;tracing;netcore</PackageTags>
   </PropertyGroup>
 
