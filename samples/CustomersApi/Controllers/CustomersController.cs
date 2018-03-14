@@ -1,5 +1,6 @@
 using System.Linq;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Samples.CustomersApi.DataStore;
 
 namespace Samples.CustomersApi.Controllers
@@ -8,10 +9,12 @@ namespace Samples.CustomersApi.Controllers
     public class CustomersController : Controller
     {
         private readonly CustomerDbContext _dbContext;
+        private readonly ILogger _logger;
 
-        public CustomersController(CustomerDbContext dbContext)
+        public CustomersController(CustomerDbContext dbContext, ILogger<CustomersController> logger)
         {
             _dbContext = dbContext;
+            _logger = logger;
         }
 
         [HttpGet]
@@ -27,6 +30,9 @@ namespace Samples.CustomersApi.Controllers
 
             if (customer == null)
                 return NotFound();
+
+            // ILogger events are sent to OpenTracing as well!
+            _logger.LogInformation("Returning data for customer {CustomerId}", id);
 
             return Json(customer);
         }

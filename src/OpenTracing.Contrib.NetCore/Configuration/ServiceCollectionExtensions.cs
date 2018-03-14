@@ -22,7 +22,8 @@ namespace Microsoft.Extensions.DependencyInjection
             var builderInstance = services.AddOpenTracingCoreServices()
                 .AddAspNetCore()
                 .AddCoreFx()
-                .AddEntityFrameworkCore();
+                .AddEntityFrameworkCore()
+                .AddLoggerProvider();
 
             builder?.Invoke(builderInstance);
 

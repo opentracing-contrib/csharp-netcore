@@ -39,7 +39,7 @@ namespace OpenTracing.Contrib.NetCore.Internal
         {
             if (_allListenersSubscription == null)
             {
-                if (IsNoopTracer())
+                if (_tracer.IsNoopTracer())
                 {
                     _logger.LogWarning("Instrumentation has not been started because no tracer was registered.");
                 }
@@ -93,19 +93,6 @@ namespace OpenTracing.Contrib.NetCore.Internal
         public void Dispose()
         {
             Stop();
-        }
-
-        private bool IsNoopTracer()
-        {
-            // TODO Change if https://github.com/opentracing/opentracing-csharp/pull/77 gets released.
-            if (_tracer == NoopTracerFactory.Create())
-                return true;
-
-            // There's no way to check the underlying tracer on the instance so we have to check the static method.
-            if (_tracer is GlobalTracer && !GlobalTracer.IsRegistered())
-                return true;
-
-            return false;
         }
     }
 }
