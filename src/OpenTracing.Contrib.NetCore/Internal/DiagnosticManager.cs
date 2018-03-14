@@ -3,26 +3,35 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using Microsoft.Extensions.Logging;
+using OpenTracing.Noop;
+using OpenTracing.Util;
 
 namespace OpenTracing.Contrib.NetCore.Internal
 {
     internal sealed class DiagnosticManager : IObserver<DiagnosticListener>, IDisposable
     {
-        private readonly ILogger<DiagnosticManager> _logger;
+        private readonly ILogger _logger;
+        private readonly ITracer _tracer;
         private readonly IEnumerable<DiagnosticSubscriber> _diagnosticSubscribers;
 
         private readonly List<IDisposable> _subscriptions = new List<IDisposable>();
         private IDisposable _allListenersSubscription;
 
-        public DiagnosticManager(ILoggerFactory loggerFactory, IEnumerable<DiagnosticSubscriber> diagnosticSubscribers)
+        public bool IsRunning => _allListenersSubscription != null;
+
+        public DiagnosticManager(ILoggerFactory loggerFactory, ITracer tracer, IEnumerable<DiagnosticSubscriber> diagnosticSubscribers)
         {
             if (loggerFactory == null)
                 throw new ArgumentNullException(nameof(loggerFactory));
+
+            if (tracer == null)
+                throw new ArgumentNullException(nameof(tracer));
 
             if (diagnosticSubscribers == null)
                 throw new ArgumentNullException(nameof(diagnosticSubscribers));
 
             _logger = loggerFactory.CreateLogger<DiagnosticManager>();
+            _tracer = tracer;
             _diagnosticSubscribers = diagnosticSubscribers.Where(x => x.IsSubscriberEnabled());
         }
 
@@ -30,8 +39,15 @@ namespace OpenTracing.Contrib.NetCore.Internal
         {
             if (_allListenersSubscription == null)
             {
-                _logger.LogTrace("Starting AllListeners subscription");
-                _allListenersSubscription = DiagnosticListener.AllListeners.Subscribe(this);
+                if (IsNoopTracer())
+                {
+                    _logger.LogWarning("Instrumentation has not been started because no tracer was registered.");
+                }
+                else
+                {
+                    _logger.LogTrace("Starting AllListeners subscription");
+                    _allListenersSubscription = DiagnosticListener.AllListeners.Subscribe(this);
+                }
             }
         }
 
@@ -77,6 +93,19 @@ namespace OpenTracing.Contrib.NetCore.Internal
         public void Dispose()
         {
             Stop();
+        }
+
+        private bool IsNoopTracer()
+        {
+            // TODO Change if https://github.com/opentracing/opentracing-csharp/pull/77 gets released.
+            if (_tracer == NoopTracerFactory.Create())
+                return true;
+
+            // There's no way to check the underlying tracer on the instance so we have to check the static method.
+            if (_tracer is GlobalTracer && !GlobalTracer.IsRegistered())
+                return true;
+
+            return false;
         }
     }
 }
