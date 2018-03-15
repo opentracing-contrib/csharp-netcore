@@ -66,7 +66,8 @@ namespace OpenTracing.Contrib.NetCore.Tests.CoreFx
 
             _httpClient = new HttpClient(diagnosticsHandler);
 
-            _diagnosticsManager = new DiagnosticManager(loggerFactory, _tracer, new DiagnosticSubscriber[] { _interceptor });
+            var diagnosticsOptions = Options.Create(new DiagnosticManagerOptions());
+            _diagnosticsManager = new DiagnosticManager(loggerFactory, _tracer, new DiagnosticSubscriber[] { _interceptor }, diagnosticsOptions);
 
             _diagnosticsManager.Start();
         }

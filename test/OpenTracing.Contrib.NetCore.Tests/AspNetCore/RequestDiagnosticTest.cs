@@ -94,6 +94,7 @@ namespace OpenTracing.Contrib.NetCore.Tests.AspNetCore
             finally
             {
                 // Let server finish writing the DiagnosticSource events.
+                // https://github.com/aspnet/Hosting/issues/1356
                 int attempts = 0;
                 while (_tracer.FinishedSpans().Count < expectedSpans && attempts++ < 3)
                 {

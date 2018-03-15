@@ -40,6 +40,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenTracing.Contrib.NetCore.Tests", "test\OpenTracing.Contrib.NetCore.Tests\OpenTracing.Contrib.NetCore.Tests.csproj", "{70707714-F09D-48A7-B6BC-3C58B243A753}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "benchmarks", "benchmarks", "{FCB84E77-6B0A-4969-8DF2-7E74197E29BB}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenTracing.Contrib.NetCore.Benchmarks", "benchmarks\OpenTracing.Contrib.NetCore.Benchmarks\OpenTracing.Contrib.NetCore.Benchmarks.csproj", "{E92B106E-1DEF-43D9-B7FF-30132DB6254B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -78,6 +82,10 @@ Global
 		{70707714-F09D-48A7-B6BC-3C58B243A753}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{70707714-F09D-48A7-B6BC-3C58B243A753}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{70707714-F09D-48A7-B6BC-3C58B243A753}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E92B106E-1DEF-43D9-B7FF-30132DB6254B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E92B106E-1DEF-43D9-B7FF-30132DB6254B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E92B106E-1DEF-43D9-B7FF-30132DB6254B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E92B106E-1DEF-43D9-B7FF-30132DB6254B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -91,6 +99,7 @@ Global
 		{10729E17-3C79-477B-BBEB-B727D7B5B60B} = {420F640A-E23F-457C-BEC7-1DEAD1C592F1}
 		{F82DCB26-7497-43A5-9F46-4B58DAB28C25} = {36333C22-54F7-403C-ABC4-BECE4EE3F52D}
 		{70707714-F09D-48A7-B6BC-3C58B243A753} = {F9AD8B6F-1F59-4678-B9CF-9CD87172A111}
+		{E92B106E-1DEF-43D9-B7FF-30132DB6254B} = {FCB84E77-6B0A-4969-8DF2-7E74197E29BB}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {832F86C2-4B74-4259-8073-04EE0C37FBCD}

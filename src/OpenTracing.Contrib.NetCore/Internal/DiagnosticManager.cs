@@ -3,8 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using Microsoft.Extensions.Logging;
-using OpenTracing.Noop;
-using OpenTracing.Util;
+using Microsoft.Extensions.Options;
 
 namespace OpenTracing.Contrib.NetCore.Internal
 {
@@ -13,25 +12,30 @@ namespace OpenTracing.Contrib.NetCore.Internal
         private readonly ILogger _logger;
         private readonly ITracer _tracer;
         private readonly IEnumerable<DiagnosticSubscriber> _diagnosticSubscribers;
+        private readonly DiagnosticManagerOptions _options;
 
         private readonly List<IDisposable> _subscriptions = new List<IDisposable>();
         private IDisposable _allListenersSubscription;
 
         public bool IsRunning => _allListenersSubscription != null;
 
-        public DiagnosticManager(ILoggerFactory loggerFactory, ITracer tracer, IEnumerable<DiagnosticSubscriber> diagnosticSubscribers)
+        public DiagnosticManager(
+            ILoggerFactory loggerFactory,
+            ITracer tracer,
+            IEnumerable<DiagnosticSubscriber> diagnosticSubscribers,
+            IOptions<DiagnosticManagerOptions> options)
         {
             if (loggerFactory == null)
                 throw new ArgumentNullException(nameof(loggerFactory));
 
-            if (tracer == null)
-                throw new ArgumentNullException(nameof(tracer));
-
             if (diagnosticSubscribers == null)
                 throw new ArgumentNullException(nameof(diagnosticSubscribers));
 
+            _tracer = tracer ?? throw new ArgumentNullException(nameof(tracer));
+            _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
+
             _logger = loggerFactory.CreateLogger<DiagnosticManager>();
-            _tracer = tracer;
+
             _diagnosticSubscribers = diagnosticSubscribers.Where(x => x.IsSubscriberEnabled());
         }
 
@@ -39,7 +43,7 @@ namespace OpenTracing.Contrib.NetCore.Internal
         {
             if (_allListenersSubscription == null)
             {
-                if (_tracer.IsNoopTracer())
+                if (_tracer.IsNoopTracer() && !_options.StartInstrumentationForNoopTracer)
                 {
                     _logger.LogWarning("Instrumentation has not been started because no tracer was registered.");
                 }
@@ -51,15 +55,15 @@ namespace OpenTracing.Contrib.NetCore.Internal
             }
         }
 
-        public void OnCompleted()
+        void IObserver<DiagnosticListener>.OnCompleted()
         {
         }
 
-        public void OnError(Exception error)
+        void IObserver<DiagnosticListener>.OnError(Exception error)
         {
         }
 
-        public void OnNext(DiagnosticListener listener)
+        void IObserver<DiagnosticListener>.OnNext(DiagnosticListener listener)
         {
             foreach (var subscriber in _diagnosticSubscribers)
             {

@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
 using OpenTracing.Contrib.NetCore.Internal;
 using OpenTracing.Mock;
 using OpenTracing.Noop;
@@ -16,8 +17,9 @@ namespace OpenTracing.Contrib.NetCore.Tests.Internal
             var loggerFactory = new NullLoggerFactory();
             var tracer = NoopTracerFactory.Create();
             var diagnosticSubscribers = new List<DiagnosticSubscriber>();
+            var options = Options.Create(new DiagnosticManagerOptions());
 
-            using (DiagnosticManager diagnosticManager = new DiagnosticManager(loggerFactory, tracer, diagnosticSubscribers))
+            using (DiagnosticManager diagnosticManager = new DiagnosticManager(loggerFactory, tracer, diagnosticSubscribers, options))
             {
                 Assert.False(diagnosticManager.IsRunning);
 
@@ -33,8 +35,9 @@ namespace OpenTracing.Contrib.NetCore.Tests.Internal
             var loggerFactory = new NullLoggerFactory();
             var tracer = GlobalTracer.Instance;
             var diagnosticSubscribers = new List<DiagnosticSubscriber>();
+            var options = Options.Create(new DiagnosticManagerOptions());
 
-            using (DiagnosticManager diagnosticManager = new DiagnosticManager(loggerFactory, tracer, diagnosticSubscribers))
+            using (DiagnosticManager diagnosticManager = new DiagnosticManager(loggerFactory, tracer, diagnosticSubscribers, options))
             {
                 Assert.False(diagnosticManager.IsRunning);
 
@@ -50,8 +53,9 @@ namespace OpenTracing.Contrib.NetCore.Tests.Internal
             var loggerFactory = new NullLoggerFactory();
             var tracer = new MockTracer();
             var diagnosticSubscribers = new List<DiagnosticSubscriber>();
+            var options = Options.Create(new DiagnosticManagerOptions());
 
-            using (DiagnosticManager diagnosticManager = new DiagnosticManager(loggerFactory, tracer, diagnosticSubscribers))
+            using (DiagnosticManager diagnosticManager = new DiagnosticManager(loggerFactory, tracer, diagnosticSubscribers, options))
             {
                 Assert.False(diagnosticManager.IsRunning);
 
