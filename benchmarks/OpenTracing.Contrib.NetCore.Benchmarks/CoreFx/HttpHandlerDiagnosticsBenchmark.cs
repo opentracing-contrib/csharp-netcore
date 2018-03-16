@@ -12,8 +12,8 @@ namespace OpenTracing.Contrib.NetCore.Benchmarks.CoreFx
 {
     public class HttpHandlerDiagnosticsBenchmark
     {
-        private DiagnosticManager _diagnosticsManager;
         private HttpClient _httpClient;
+        private ServiceProvider _serviceProvider;
 
         [Params(InstrumentationMode.None, InstrumentationMode.Noop, InstrumentationMode.Mock)]
         public InstrumentationMode Mode { get; set; }
@@ -23,7 +23,7 @@ namespace OpenTracing.Contrib.NetCore.Benchmarks.CoreFx
         {
             _httpClient = CreateHttpClient();
 
-            IServiceProvider serviceProvider = new ServiceCollection()
+            _serviceProvider = new ServiceCollection()
                 .AddLogging()
                 .AddOpenTracingCoreServices(builder =>
                 {
@@ -32,14 +32,14 @@ namespace OpenTracing.Contrib.NetCore.Benchmarks.CoreFx
                 })
                 .BuildServiceProvider();
 
-            _diagnosticsManager = serviceProvider.GetRequiredService<DiagnosticManager>();
-            _diagnosticsManager.Start();
+            var diagnosticsManager = _serviceProvider.GetRequiredService<DiagnosticManager>();
+            diagnosticsManager.Start();
         }
 
         [GlobalCleanup]
         public void GlobalCleanup()
         {
-            _diagnosticsManager?.Dispose();
+            (_serviceProvider as IDisposable).Dispose();
         }
 
         [Benchmark]

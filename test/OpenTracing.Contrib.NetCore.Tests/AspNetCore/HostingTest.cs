@@ -1,13 +1,16 @@
 using System;
-using System.Net.Http;
+using System.Diagnostics;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Hosting.Internal;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.TestHost;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using NSubstitute;
 using OpenTracing.Contrib.NetCore.AspNetCore;
+using OpenTracing.Contrib.NetCore.Configuration;
+using OpenTracing.Contrib.NetCore.Internal;
 using OpenTracing.Mock;
 using OpenTracing.Tag;
 using Xunit;
@@ -18,114 +21,98 @@ namespace OpenTracing.Contrib.NetCore.Tests.AspNetCore
     [Collection("DiagnosticSource") /* All DiagnosticSource tests must be in the same collection to ensure they are NOT run in parallel. */]
     public class HostingTest : IDisposable
     {
-        private readonly ITestOutputHelper _output;
         private readonly MockTracer _tracer;
+        private readonly HostingOptions _options;
 
-        private TestServer _server;
-        private HttpClient _client;
+        private readonly IServiceProvider _serviceProvider;
+        private readonly FeatureCollection _features;
+        private readonly DiagnosticManager _diagnosticManager;
+        private readonly HostingApplication _hostingApplication;
+        private readonly DefaultHttpContext _httpContext;
 
         public HostingTest(ITestOutputHelper output)
         {
-            _output = output ?? throw new ArgumentNullException(nameof(output));
-
             _tracer = new MockTracer();
-        }
 
-        private void StartServer(Action<HostingOptions> hostingOptions = null)
-        {
-            _server = new TestServer(new WebHostBuilder()
-                .ConfigureServices((webHostBuilderContext, services) =>
-                {
-                    services.AddSingleton<ITracer>(_tracer);
+            var aspNetCoreOptions = new AspNetCoreDiagnosticOptions();
+            _options = aspNetCoreOptions.Hosting;
 
-                    services.AddOpenTracingCoreServices(builder =>
-                    {
-                        builder.AddAspNetCore();
-                        builder.ConfigureAspNetCore(options => hostingOptions?.Invoke(options.Hosting));
-                    });
-                })
-                .ConfigureLogging(logging =>
+            _serviceProvider = new ServiceCollection()
+                .AddLogging(logging =>
                 {
-                    logging.AddXunit(_output);
+                    logging.AddXunit(output);
                     logging.AddFilter("OpenTracing", LogLevel.Trace);
                 })
-                .Configure(app =>
+                .AddOpenTracingCoreServices(builder =>
                 {
-                    app.Map("/foo", x =>
-                    {
-                        x.Run(async context => await context.Response.WriteAsync("bar"));
-                    });
-                    app.Map("/exception", x =>
-                    {
-                        x.Run(context => throw new InvalidOperationException("test exception"));
-                    });
-                    app.Map("/wait", x =>
-                    {
-                        x.Run(async context =>
-                        {
-                            int delay = int.Parse(context.Request.Query["delay"]);
-                            await Task.Delay(TimeSpan.FromMilliseconds(delay), context.RequestAborted);
-                        });
-                    });
-                }));
+                    builder.AddAspNetCore();
 
-            _client = _server.CreateClient();
-        }
+                    builder.Services.AddSingleton<ITracer>(_tracer);
+                    builder.Services.AddSingleton(Options.Create(aspNetCoreOptions));
+                })
+                .BuildServiceProvider();
 
-        private Task<string> GetAsync(string requestUri, int expectedSpans = 1, Action<HostingOptions> options = null,
-            Action<HttpClient> clientOptions = null)
-        {
-            return SendAsync(new HttpRequestMessage(HttpMethod.Get, requestUri), expectedSpans, options, clientOptions);
-        }
+            _diagnosticManager = _serviceProvider.GetRequiredService<DiagnosticManager>();
+            _diagnosticManager.Start();
 
-        private async Task<string> SendAsync(HttpRequestMessage request, int expectedSpans = 1, Action<HostingOptions> options = null,
-            Action<HttpClient> clientOptions = null)
-        {
-            StartServer(options);
+            // Request
 
-            clientOptions?.Invoke(_client);
+            _httpContext = new DefaultHttpContext();
+            SetRequest();
 
-            string responseString = null;
-            try
-            {
-                HttpResponseMessage response = await _client.SendAsync(request);
+            // Hosting Application
 
-                responseString = await response.Content.ReadAsStringAsync();
-            }
-            finally
-            {
-                // Let server finish writing the DiagnosticSource events.
-                // https://github.com/aspnet/Hosting/issues/1356
-                int attempts = 0;
-                while (_tracer.FinishedSpans().Count < expectedSpans && attempts++ < 3)
-                {
-                    await Task.Delay(50);
-                }
+            var diagnosticSource = new DiagnosticListener("Microsoft.AspNetCore");
 
-                Dispose();
-            }
+            _features = new FeatureCollection();
+            _features.Set<IHttpRequestFeature>(new HttpRequestFeature());
 
-            return responseString;
+            var httpContextFactory = Substitute.For<IHttpContextFactory>();
+            httpContextFactory.Create(_features).Returns(_httpContext);
+
+            _hostingApplication = new HostingApplication(
+                ctx => Task.FromResult(0),
+                _serviceProvider.GetRequiredService<ILogger<HostingTest>>(),
+                diagnosticSource,
+                httpContextFactory);
         }
 
         public void Dispose()
         {
-            _server?.Dispose();
-            _client?.Dispose();
+            _diagnosticManager.Dispose();
+            (_serviceProvider as IDisposable).Dispose();
         }
 
-        [Fact]
-        public async Task Calling_TestServer_succeeds()
+        private void SetRequest()
         {
-            string response = await GetAsync("/foo");
+            var request = _httpContext.Request;
 
-            Assert.Equal("bar", response);
+            Uri requestUri = new Uri("http://www.example.com/foo");
+
+            request.Protocol = "HTTP/1.1";
+            request.Method = HttpMethods.Get;
+            request.Scheme = requestUri.Scheme;
+            request.Host = HostString.FromUriComponent(requestUri);
+            if (requestUri.IsDefaultPort)
+            {
+                request.Host = new HostString(request.Host.Host);
+            }
+            request.PathBase = PathString.Empty;
+            request.Path = PathString.FromUriComponent(requestUri);
+            request.QueryString = QueryString.FromUriComponent(requestUri);
+        }
+
+        private async Task ExecuteRequestAsync(Exception exception = null)
+        {
+            var context = _hostingApplication.CreateContext(_features);
+            await _hostingApplication.ProcessRequestAsync(context);
+            _hostingApplication.DisposeContext(context, exception);
         }
 
         [Fact]
         public async Task Request_creates_span()
         {
-            string response = await GetAsync("/foo");
+            await ExecuteRequestAsync();
 
             var finishedSpans = _tracer.FinishedSpans();
 
@@ -135,7 +122,7 @@ namespace OpenTracing.Contrib.NetCore.Tests.AspNetCore
         [Fact]
         public async Task Span_has_correct_properties()
         {
-            await GetAsync("/foo");
+            await ExecuteRequestAsync();
 
             var finishedSpans = _tracer.FinishedSpans();
             Assert.Single(finishedSpans);
@@ -151,14 +138,16 @@ namespace OpenTracing.Contrib.NetCore.Tests.AspNetCore
             Assert.Equal(Tags.SpanKindServer, span.Tags[Tags.SpanKind.Key]);
             Assert.Equal("HttpIn", span.Tags[Tags.Component.Key]);
             Assert.Equal("GET", span.Tags[Tags.HttpMethod.Key]);
-            Assert.Equal("http://localhost/foo", span.Tags[Tags.HttpUrl.Key]);
+            Assert.Equal("http://www.example.com/foo", span.Tags[Tags.HttpUrl.Key]);
             Assert.Equal(200, span.Tags[Tags.HttpStatus.Key]);
         }
 
         [Fact]
         public async Task Span_has_status_404()
         {
-            await GetAsync("/not-found");
+            _httpContext.Response.StatusCode = 404;
+
+            await ExecuteRequestAsync();
 
             var finishedSpans = _tracer.FinishedSpans();
             Assert.Single(finishedSpans);
@@ -170,11 +159,10 @@ namespace OpenTracing.Contrib.NetCore.Tests.AspNetCore
         [Fact]
         public async Task Extracts_trace_headers()
         {
-            var request = new HttpRequestMessage(HttpMethod.Get, "/foo");
-            request.Headers.Add("traceid", "100");
-            request.Headers.Add("spanid", "101");
+            _httpContext.Request.Headers.Add("traceid", "100");
+            _httpContext.Request.Headers.Add("spanid", "101");
 
-            await SendAsync(request);
+            await ExecuteRequestAsync();
 
             var finishedSpans = _tracer.FinishedSpans();
             Assert.Single(finishedSpans);
@@ -192,13 +180,11 @@ namespace OpenTracing.Contrib.NetCore.Tests.AspNetCore
         [Fact]
         public async Task Does_not_Extract_trace_headers_if_disabled_in_options()
         {
-            var request = new HttpRequestMessage(HttpMethod.Get, "/foo");
-            request.Headers.Add("ignore", "1");
+            _httpContext.Request.Headers.Add("ignore", "1");
 
-            await SendAsync(request, options: options =>
-            {
-                options.ExtractEnabled = context => !context.Request.Headers.ContainsKey("ignore");
-            });
+            _options.ExtractEnabled = context => !context.Request.Headers.ContainsKey("ignore");
+
+            await ExecuteRequestAsync();
 
             var finishedSpans = _tracer.FinishedSpans();
             Assert.Single(finishedSpans);
@@ -210,13 +196,11 @@ namespace OpenTracing.Contrib.NetCore.Tests.AspNetCore
         [Fact]
         public async Task Ignores_requests_with_custom_rule()
         {
-            var request = new HttpRequestMessage(HttpMethod.Get, "/foo");
-            request.Headers.Add("ignore", "1");
+            _httpContext.Request.Headers.Add("ignore", "1");
 
-            await SendAsync(request, options: options =>
-            {
-                options.IgnorePatterns.Add(context => context.Request.Headers.ContainsKey("ignore"));
-            });
+            _options.IgnorePatterns.Add(context => context.Request.Headers.ContainsKey("ignore"));
+
+            await ExecuteRequestAsync();
 
             Assert.Empty(_tracer.FinishedSpans());
         }
@@ -224,10 +208,9 @@ namespace OpenTracing.Contrib.NetCore.Tests.AspNetCore
         [Fact]
         public async Task Calls_Options_OperationNameResolver()
         {
-            await GetAsync("/foo", options: options =>
-            {
-                options.OperationNameResolver = _ => "test";
-            });
+            _options.OperationNameResolver = _ => "test";
+
+            await ExecuteRequestAsync();
 
             var finishedSpans = _tracer.FinishedSpans();
             Assert.Single(finishedSpans);
@@ -240,13 +223,9 @@ namespace OpenTracing.Contrib.NetCore.Tests.AspNetCore
         public async Task Calls_Options_OnRequest()
         {
             bool onRequestCalled = false;
+            _options.OnRequest = (_, __) => onRequestCalled = true;
 
-            await GetAsync("/foo", options: options =>
-            {
-                options.OnRequest = (_, __) => onRequestCalled = true;
-            });
-
-            await GetAsync("/foo");
+            await ExecuteRequestAsync();
 
             Assert.True(onRequestCalled);
         }
@@ -254,7 +233,8 @@ namespace OpenTracing.Contrib.NetCore.Tests.AspNetCore
         [Fact]
         public async Task Creates_error_span_if_request_throws_exception()
         {
-            await Assert.ThrowsAsync<InvalidOperationException>(() => GetAsync("/exception"));
+            var exception = new InvalidOperationException("You shall not pass");
+            await ExecuteRequestAsync(exception);
 
             var finishedSpans = _tracer.FinishedSpans();
             Assert.Single(finishedSpans);
@@ -266,26 +246,6 @@ namespace OpenTracing.Contrib.NetCore.Tests.AspNetCore
             Assert.Single(logs);
             Assert.Equal("error", logs[0].Fields[LogFields.Event]);
             Assert.Equal("InvalidOperationException", logs[0].Fields[LogFields.ErrorKind]);
-        }
-
-        [Fact]
-        public async Task Creates_error_span_if_client_aborts()
-        {
-            await Assert.ThrowsAsync<TaskCanceledException>(() => GetAsync("/wait?delay=1000", clientOptions: client =>
-            {
-                client.Timeout = TimeSpan.FromMilliseconds(50);
-            }));
-
-            var finishedSpans = _tracer.FinishedSpans();
-            Assert.Single(finishedSpans);
-
-            var span = finishedSpans[0];
-            Assert.True(span.Tags[Tags.Error.Key] as bool?);
-
-            var logs = span.LogEntries;
-            Assert.Single(logs);
-            Assert.Equal("error", logs[0].Fields[LogFields.Event]);
-            Assert.Equal("TaskCanceledException", logs[0].Fields[LogFields.ErrorKind]);
         }
     }
 }
