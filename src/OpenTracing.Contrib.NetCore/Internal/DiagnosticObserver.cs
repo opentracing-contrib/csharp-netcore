@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 
 namespace OpenTracing.Contrib.NetCore.Internal
 {
-    internal abstract class DiagnosticSubscriber
+    internal abstract class DiagnosticObserver
     {
         protected ILogger Logger { get; }
 
@@ -12,7 +12,7 @@ namespace OpenTracing.Contrib.NetCore.Internal
 
         protected bool IsLogLevelTraceEnabled { get; }
 
-        protected DiagnosticSubscriber(ILoggerFactory loggerFactory, ITracer tracer)
+        protected DiagnosticObserver(ILoggerFactory loggerFactory, ITracer tracer)
         {
             if (loggerFactory == null)
                 throw new ArgumentNullException(nameof(loggerFactory));

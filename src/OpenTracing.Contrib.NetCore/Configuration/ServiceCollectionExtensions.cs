@@ -19,21 +19,21 @@ namespace Microsoft.Extensions.DependencyInjection
             if (services == null)
                 throw new ArgumentNullException(nameof(services));
 
-            var builderInstance = services.AddOpenTracingCoreServices()
-                .AddAspNetCore()
-                .AddCoreFx()
-                .AddEntityFrameworkCore()
-                .AddLoggerProvider();
+            return services.AddOpenTracingCoreServices(otBuilder =>
+            {
+                otBuilder.AddAspNetCore()
+                    .AddCoreFx()
+                    .AddEntityFrameworkCore()
+                    .AddLoggerProvider();
 
-            builder?.Invoke(builderInstance);
-
-            return services;
+                builder?.Invoke(otBuilder);
+            });
         }
 
         /// <summary>
         /// Adds the core services required for OpenTracing without any actual instrumentations.
         /// </summary>
-        public static IOpenTracingBuilder AddOpenTracingCoreServices(this IServiceCollection services)
+        public static IServiceCollection AddOpenTracingCoreServices(this IServiceCollection services, Action<IOpenTracingBuilder> builder = null)
         {
             if (services == null)
                 throw new ArgumentNullException(nameof(services));
@@ -43,9 +43,11 @@ namespace Microsoft.Extensions.DependencyInjection
             services.TryAddSingleton<DiagnosticManager>();
             services.TryAddEnumerable(ServiceDescriptor.Singleton<IHostedService, InstrumentationService>());
 
-            var builder = new OpenTracingBuilder(services);
+            var builderInstance = new OpenTracingBuilder(services);
 
-            return builder;
+            builder?.Invoke(builderInstance);
+
+            return services;
         }
     }
 }

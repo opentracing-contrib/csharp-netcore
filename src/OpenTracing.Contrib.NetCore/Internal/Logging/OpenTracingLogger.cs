@@ -31,11 +31,6 @@ namespace OpenTracing.Contrib.NetCore.Internal.Logging
 
         public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
         {
-            if (!IsEnabled(logLevel))
-            {
-                return;
-            }
-
             if (formatter == null)
             {
                 // This throws an Exception e.g. in Microsoft's DebugLogger but I don't want the app to crash if the logger has an issue.
@@ -47,6 +42,11 @@ namespace OpenTracing.Contrib.NetCore.Internal.Logging
             if (span == null)
             {
                 // Creating a new span for a log message seems brutal so we ignore messages if we can't attach it to an active span.
+                return;
+            }
+
+            if (!IsEnabled(logLevel))
+            {
                 return;
             }
 

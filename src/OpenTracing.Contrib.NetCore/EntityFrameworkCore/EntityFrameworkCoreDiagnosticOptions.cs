@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 
 namespace OpenTracing.Contrib.NetCore.EntityFrameworkCore
 {
-    public class EntityFrameworkCoreOptions
+    public class EntityFrameworkCoreDiagnosticOptions
     {
         public const string DefaultComponent = "EFCore";
 

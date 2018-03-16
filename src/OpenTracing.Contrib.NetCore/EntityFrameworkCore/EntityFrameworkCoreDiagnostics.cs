@@ -2,51 +2,34 @@ using System;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using OpenTracing.Contrib.NetCore.CoreFx;
 using OpenTracing.Contrib.NetCore.Internal;
 using OpenTracing.Tag;
 
 namespace OpenTracing.Contrib.NetCore.EntityFrameworkCore
 {
-    internal sealed class EntityFrameworkCoreDiagnostics : DiagnosticSubscriberWithObserver
+    internal sealed class EntityFrameworkCoreDiagnostics : DiagnosticListenerObserver
     {
         // https://github.com/aspnet/EntityFrameworkCore/blob/dev/src/EFCore/DbLoggerCategory.cs
         public const string DiagnosticListenerName = "Microsoft.EntityFrameworkCore";
 
-        public const string EventOnCommandExecuting = DiagnosticListenerName + ".Database.Command.CommandExecuting";
-        public const string EventOnCommandExecuted = DiagnosticListenerName + ".Database.Command.CommandExecuted";
-        public const string EventOnCommandError = DiagnosticListenerName + ".Database.Command.CommandError";
-
-        public static readonly Action<GenericDiagnosticOptions> GenericDiagnosticsExclusions = options =>
-        {
-            options.IgnoreEvent(DiagnosticListenerName, EventOnCommandExecuting);
-            options.IgnoreEvent(DiagnosticListenerName, EventOnCommandExecuted);
-            options.IgnoreEvent(DiagnosticListenerName, EventOnCommandError);
-        };
-
         private const string TagMethod = "db.method";
         private const string TagIsAsync = "db.async";
 
-        private readonly EntityFrameworkCoreOptions _options;
+        private readonly EntityFrameworkCoreDiagnosticOptions _options;
 
-        protected override string ListenerName => DiagnosticListenerName;
+        protected override string GetListenerName() => DiagnosticListenerName;
 
-        public EntityFrameworkCoreDiagnostics(ILoggerFactory loggerFactory, ITracer tracer, IOptions<EntityFrameworkCoreOptions> options)
+        public EntityFrameworkCoreDiagnostics(ILoggerFactory loggerFactory, ITracer tracer, IOptions<EntityFrameworkCoreDiagnosticOptions> options)
             : base(loggerFactory, tracer)
         {
             _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
         }
 
-        public override bool IsSubscriberEnabled()
-        {
-            return true;
-        }
-
-        protected override void OnNextCore(string eventName, object untypedArg)
+        protected override void OnNext(string eventName, object untypedArg)
         {
             switch (eventName)
             {
-                case EventOnCommandExecuting:
+                case "Microsoft.EntityFrameworkCore.Database.Command.CommandExecuting":
                     {
                         CommandEventData args = (CommandEventData)untypedArg;
 
@@ -63,19 +46,25 @@ namespace OpenTracing.Contrib.NetCore.EntityFrameworkCore
                     }
                     break;
 
-                case EventOnCommandExecuted:
+                case "Microsoft.EntityFrameworkCore.Database.Command.CommandExecuted":
                     {
                         DisposeActiveScope(isScopeRequired: true);
                     }
                     break;
 
-                case EventOnCommandError:
+                case "Microsoft.EntityFrameworkCore.Database.Command.CommandError":
                     {
                         CommandErrorEventData args = (CommandErrorEventData)untypedArg;
 
                         // The "CommandExecuted" event is NOT called in case of an exception,
                         // so we have to dispose the scope here as well!
                         DisposeActiveScope(isScopeRequired: true, exception: args.Exception);
+                    }
+                    break;
+
+                default:
+                    {
+                        ProcessUnhandledEvent(eventName, untypedArg);
                     }
                     break;
             }

@@ -16,7 +16,7 @@ using Xunit.Abstractions;
 namespace OpenTracing.Contrib.NetCore.Tests.AspNetCore
 {
     [Collection("DiagnosticSource") /* All DiagnosticSource tests must be in the same collection to ensure they are NOT run in parallel. */]
-    public class RequestDiagnosticTest : IDisposable
+    public class HostingTest : IDisposable
     {
         private readonly ITestOutputHelper _output;
         private readonly MockTracer _tracer;
@@ -24,29 +24,30 @@ namespace OpenTracing.Contrib.NetCore.Tests.AspNetCore
         private TestServer _server;
         private HttpClient _client;
 
-        public RequestDiagnosticTest(ITestOutputHelper output)
+        public HostingTest(ITestOutputHelper output)
         {
             _output = output ?? throw new ArgumentNullException(nameof(output));
 
             _tracer = new MockTracer();
         }
 
-        private void StartServer(Action<RequestDiagnosticOptions> diagnosticOptions = null)
+        private void StartServer(Action<HostingOptions> hostingOptions = null)
         {
             _server = new TestServer(new WebHostBuilder()
                 .ConfigureServices((webHostBuilderContext, services) =>
                 {
                     services.AddSingleton<ITracer>(_tracer);
 
-                    services.AddOpenTracingCoreServices()
-                        .AddAspNetCore()
-                        .ConfigureAspNetCoreRequest(diagnosticOptions);
+                    services.AddOpenTracingCoreServices(builder =>
+                    {
+                        builder.AddAspNetCore();
+                        builder.ConfigureAspNetCore(options => hostingOptions?.Invoke(options.Hosting));
+                    });
                 })
                 .ConfigureLogging(logging =>
                 {
-                    logging
-                        .AddXunit(_output)
-                        .AddFilter("OpenTracing", LogLevel.Trace);
+                    logging.AddXunit(_output);
+                    logging.AddFilter("OpenTracing", LogLevel.Trace);
                 })
                 .Configure(app =>
                 {
@@ -71,13 +72,13 @@ namespace OpenTracing.Contrib.NetCore.Tests.AspNetCore
             _client = _server.CreateClient();
         }
 
-        private Task<string> GetAsync(string requestUri, int expectedSpans = 1, Action<RequestDiagnosticOptions> options = null,
+        private Task<string> GetAsync(string requestUri, int expectedSpans = 1, Action<HostingOptions> options = null,
             Action<HttpClient> clientOptions = null)
         {
             return SendAsync(new HttpRequestMessage(HttpMethod.Get, requestUri), expectedSpans, options, clientOptions);
         }
 
-        private async Task<string> SendAsync(HttpRequestMessage request, int expectedSpans = 1, Action<RequestDiagnosticOptions> options = null,
+        private async Task<string> SendAsync(HttpRequestMessage request, int expectedSpans = 1, Action<HostingOptions> options = null,
             Action<HttpClient> clientOptions = null)
         {
             StartServer(options);

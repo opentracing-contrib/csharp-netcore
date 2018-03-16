@@ -6,9 +6,6 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
-using OpenTracing.Contrib.NetCore.Internal;
-using OpenTracing.Mock;
-using OpenTracing.Noop;
 
 namespace OpenTracing.Contrib.NetCore.Benchmarks.AspNetCore
 {
@@ -23,29 +20,14 @@ namespace OpenTracing.Contrib.NetCore.Benchmarks.AspNetCore
         [GlobalSetup]
         public void GlobalSetup()
         {
-            ITracer tracer = null;
-            bool startInstrumentationForNoopTracer = false;
-            switch (Mode)
-            {
-                case InstrumentationMode.None:
-                    tracer = NoopTracerFactory.Create();
-                    break;
-                case InstrumentationMode.Noop:
-                    tracer = NoopTracerFactory.Create();
-                    startInstrumentationForNoopTracer = true;
-                    break;
-                case InstrumentationMode.Mock:
-                    tracer = new MockTracer();
-                    break;
-            }
-
             _server = new TestServer(new WebHostBuilder()
                 .ConfigureServices((webHostBuilderContext, services) =>
                 {
-                    services.AddSingleton<ITracer>(tracer);
-                    services.Configure<DiagnosticManagerOptions>(o => o.StartInstrumentationForNoopTracer = startInstrumentationForNoopTracer);
-                    services.AddOpenTracingCoreServices()
-                        .AddAspNetCore();
+                    services.AddOpenTracingCoreServices(builder =>
+                    {
+                        builder.AddBenchmarkTracer(Mode);
+                        builder.AddAspNetCore();
+                    });
                 })
                 .Configure(app =>
                 {

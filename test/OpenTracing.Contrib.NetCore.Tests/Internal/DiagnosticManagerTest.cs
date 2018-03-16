@@ -16,7 +16,7 @@ namespace OpenTracing.Contrib.NetCore.Tests.Internal
         {
             var loggerFactory = new NullLoggerFactory();
             var tracer = NoopTracerFactory.Create();
-            var diagnosticSubscribers = new List<DiagnosticSubscriber>();
+            var diagnosticSubscribers = new List<DiagnosticObserver>();
             var options = Options.Create(new DiagnosticManagerOptions());
 
             using (DiagnosticManager diagnosticManager = new DiagnosticManager(loggerFactory, tracer, diagnosticSubscribers, options))
@@ -34,7 +34,7 @@ namespace OpenTracing.Contrib.NetCore.Tests.Internal
         {
             var loggerFactory = new NullLoggerFactory();
             var tracer = GlobalTracer.Instance;
-            var diagnosticSubscribers = new List<DiagnosticSubscriber>();
+            var diagnosticSubscribers = new List<DiagnosticObserver>();
             var options = Options.Create(new DiagnosticManagerOptions());
 
             using (DiagnosticManager diagnosticManager = new DiagnosticManager(loggerFactory, tracer, diagnosticSubscribers, options))
@@ -52,7 +52,7 @@ namespace OpenTracing.Contrib.NetCore.Tests.Internal
         {
             var loggerFactory = new NullLoggerFactory();
             var tracer = new MockTracer();
-            var diagnosticSubscribers = new List<DiagnosticSubscriber>();
+            var diagnosticSubscribers = new List<DiagnosticObserver>();
             var options = Options.Create(new DiagnosticManagerOptions());
 
             using (DiagnosticManager diagnosticManager = new DiagnosticManager(loggerFactory, tracer, diagnosticSubscribers, options))

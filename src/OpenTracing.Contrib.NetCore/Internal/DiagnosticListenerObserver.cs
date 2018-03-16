@@ -5,41 +5,45 @@ using Microsoft.Extensions.Logging;
 
 namespace OpenTracing.Contrib.NetCore.Internal
 {
-    internal abstract class DiagnosticSubscriberWithObserver : DiagnosticSubscriber, IObserver<KeyValuePair<string, object>>
+
+    internal abstract class DiagnosticListenerObserver : DiagnosticObserver, IObserver<KeyValuePair<string, object>>
     {
+        private readonly GenericEventProcessor _genericEventProcessor;
+
         /// <summary>
         /// The name of the <see cref="DiagnosticListener"/> that should be instrumented.
         /// </summary>
-        protected abstract string ListenerName { get; }
+        protected abstract string GetListenerName();
 
-        protected DiagnosticSubscriberWithObserver(ILoggerFactory loggerFactory, ITracer tracer)
+        protected DiagnosticListenerObserver(ILoggerFactory loggerFactory, ITracer tracer)
             : base(loggerFactory, tracer)
         {
+            _genericEventProcessor = new GenericEventProcessor(GetListenerName(), Tracer, Logger);
         }
 
         public override IDisposable SubscribeIfMatch(DiagnosticListener diagnosticListener)
         {
-            if (diagnosticListener.Name == ListenerName)
+            if (diagnosticListener.Name == GetListenerName())
             {
-                return diagnosticListener.Subscribe(this);
+                return diagnosticListener.Subscribe(this, IsEnabled);
             }
 
             return null;
         }
 
-        public void OnCompleted()
+        void IObserver<KeyValuePair<string, object>>.OnCompleted()
         {
         }
 
-        public void OnError(Exception error)
+        void IObserver<KeyValuePair<string, object>>.OnError(Exception error)
         {
         }
 
-        public void OnNext(KeyValuePair<string, object> value)
+        void IObserver<KeyValuePair<string, object>>.OnNext(KeyValuePair<string, object> value)
         {
             try
             {
-                OnNextCore(value.Key, value.Value);
+                OnNext(value.Key, value.Value);
             }
             catch (Exception ex)
             {
@@ -47,7 +51,17 @@ namespace OpenTracing.Contrib.NetCore.Internal
             }
         }
 
-        protected abstract void OnNextCore(string eventName, object untypedArg);
+        protected virtual bool IsEnabled(string eventName)
+        {
+            return true;
+        }
+
+        protected abstract void OnNext(string eventName, object untypedArg);
+
+        protected void ProcessUnhandledEvent(string eventName, object untypedArg)
+        {
+            _genericEventProcessor.ProcessEvent(eventName, untypedArg);
+        }
 
         protected void DisposeActiveScope(bool isScopeRequired, Exception exception = null)
         {

@@ -14,32 +14,22 @@ namespace OpenTracing.Contrib.NetCore.CoreFx
     /// <para/>See https://github.com/dotnet/corefx/blob/master/src/System.Net.Http/src/System/Net/Http/DiagnosticsHandler.cs
     /// <para/>and https://github.com/dotnet/corefx/blob/master/src/System.Net.Http/src/System/Net/Http/DiagnosticsHandlerLoggingStrings.cs
     /// </summary>
-    internal sealed class HttpHandlerDiagnostics : DiagnosticSubscriberWithObserver
+    internal sealed class HttpHandlerDiagnostics : DiagnosticListenerObserver
     {
         public const string DiagnosticListenerName = "HttpHandlerDiagnosticListener";
 
-        public const string EventActivity = "System.Net.Http.HttpRequestOut";
-        public const string EventActivityStart = EventActivity + ".Start";
-        public const string EventActivityStop = EventActivity + ".Stop";
-        public const string EventException = "System.Net.Http.Exception";
-
-        public static readonly Action<GenericDiagnosticOptions> GenericDiagnosticsExclusions = options =>
-        {
-            options.IgnoredListenerNames.Add(DiagnosticListenerName);
-        };
-
         private const string PropertiesKey = "ot-Span";
 
-        private readonly PropertyFetcher _activityStart_RequestFetcher = new PropertyFetcher("Request");
-        private readonly PropertyFetcher _activityStop_RequestFetcher = new PropertyFetcher("Request");
-        private readonly PropertyFetcher _activityStop_ResponseFetcher = new PropertyFetcher("Response");
-        private readonly PropertyFetcher _activityStop_RequestTaskStatusFetcher = new PropertyFetcher("RequestTaskStatus");
-        private readonly PropertyFetcher _exception_RequestFetcher = new PropertyFetcher("Request");
-        private readonly PropertyFetcher _exception_ExceptionFetcher = new PropertyFetcher("Exception");
+        private static readonly PropertyFetcher _activityStart_RequestFetcher = new PropertyFetcher("Request");
+        private static readonly PropertyFetcher _activityStop_RequestFetcher = new PropertyFetcher("Request");
+        private static readonly PropertyFetcher _activityStop_ResponseFetcher = new PropertyFetcher("Response");
+        private static readonly PropertyFetcher _activityStop_RequestTaskStatusFetcher = new PropertyFetcher("RequestTaskStatus");
+        private static readonly PropertyFetcher _exception_RequestFetcher = new PropertyFetcher("Request");
+        private static readonly PropertyFetcher _exception_ExceptionFetcher = new PropertyFetcher("Exception");
 
         private readonly HttpHandlerDiagnosticOptions _options;
 
-        protected override string ListenerName => DiagnosticListenerName;
+        protected override string GetListenerName() => DiagnosticListenerName;
 
         public HttpHandlerDiagnostics(ILoggerFactory loggerFactory, ITracer tracer, IOptions<HttpHandlerDiagnosticOptions> options)
             : base(loggerFactory, tracer)
@@ -47,11 +37,11 @@ namespace OpenTracing.Contrib.NetCore.CoreFx
             _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
         }
 
-        protected override void OnNextCore(string eventName, object arg)
+        protected override void OnNext(string eventName, object arg)
         {
             switch (eventName)
             {
-                case EventActivityStart:
+                case "System.Net.Http.HttpRequestOut.Start":
                     {
                         var request = (HttpRequestMessage)_activityStart_RequestFetcher.Fetch(arg);
 
@@ -84,7 +74,7 @@ namespace OpenTracing.Contrib.NetCore.CoreFx
                     }
                     break;
 
-                case EventException:
+                case "System.Net.Http.Exception":
                     {
                         var request = (HttpRequestMessage)_exception_RequestFetcher.Fetch(arg);
 
@@ -97,7 +87,7 @@ namespace OpenTracing.Contrib.NetCore.CoreFx
                     }
                     break;
 
-                case EventActivityStop:
+                case "System.Net.Http.HttpRequestOut.Stop":
                     {
                         var request = (HttpRequestMessage)_activityStop_RequestFetcher.Fetch(arg);
 

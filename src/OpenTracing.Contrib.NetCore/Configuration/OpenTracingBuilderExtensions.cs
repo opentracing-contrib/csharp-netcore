@@ -2,6 +2,7 @@ using System;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using OpenTracing.Contrib.NetCore.AspNetCore;
+using OpenTracing.Contrib.NetCore.Configuration;
 using OpenTracing.Contrib.NetCore.CoreFx;
 using OpenTracing.Contrib.NetCore.EntityFrameworkCore;
 using OpenTracing.Contrib.NetCore.Internal;
@@ -12,12 +13,12 @@ namespace Microsoft.Extensions.DependencyInjection
     public static class OpenTracingBuilderExtensions
     {
         internal static IOpenTracingBuilder AddDiagnosticSubscriber<TDiagnosticSubscriber>(this IOpenTracingBuilder builder)
-            where TDiagnosticSubscriber : DiagnosticSubscriber
+            where TDiagnosticSubscriber : DiagnosticObserver
         {
             if (builder == null)
                 throw new ArgumentNullException(nameof(builder));
 
-            builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<DiagnosticSubscriber, TDiagnosticSubscriber>());
+            builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<DiagnosticObserver, TDiagnosticSubscriber>());
 
             return builder;
         }
@@ -30,16 +31,13 @@ namespace Microsoft.Extensions.DependencyInjection
             if (builder == null)
                 throw new ArgumentNullException(nameof(builder));
 
-            builder.AddDiagnosticSubscriber<MvcDiagnostics>();
-            builder.ConfigureGenericDiagnostics(MvcDiagnostics.GenericDiagnosticsExclusions);
-
-            builder.AddDiagnosticSubscriber<RequestDiagnostics>();
-            builder.ConfigureGenericDiagnostics(RequestDiagnostics.GenericDiagnosticsExclusions);
+            builder.AddDiagnosticSubscriber<AspNetCoreDiagnostics>();
+            builder.ConfigureGenericDiagnostics(options => options.IgnoredListenerNames.Add(AspNetCoreDiagnostics.DiagnosticListenerName));
 
             return builder;
         }
 
-        public static IOpenTracingBuilder ConfigureAspNetCoreRequest(this IOpenTracingBuilder builder, Action<RequestDiagnosticOptions> options)
+        public static IOpenTracingBuilder ConfigureAspNetCore(this IOpenTracingBuilder builder, Action<AspNetCoreDiagnosticOptions> options)
         {
             if (builder == null)
                 throw new ArgumentNullException(nameof(builder));
@@ -63,7 +61,7 @@ namespace Microsoft.Extensions.DependencyInjection
             builder.AddDiagnosticSubscriber<GenericDiagnostics>();
 
             builder.AddDiagnosticSubscriber<HttpHandlerDiagnostics>();
-            builder.ConfigureGenericDiagnostics(HttpHandlerDiagnostics.GenericDiagnosticsExclusions);
+            builder.ConfigureGenericDiagnostics(options => options.IgnoredListenerNames.Add(HttpHandlerDiagnostics.DiagnosticListenerName));
 
             return builder;
         }
@@ -90,7 +88,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 throw new ArgumentNullException(nameof(builder));
 
             builder.AddDiagnosticSubscriber<EntityFrameworkCoreDiagnostics>();
-            builder.ConfigureGenericDiagnostics(EntityFrameworkCoreDiagnostics.GenericDiagnosticsExclusions);
+            builder.ConfigureGenericDiagnostics(options => options.IgnoredListenerNames.Add(EntityFrameworkCoreDiagnostics.DiagnosticListenerName));
 
             return builder;
         }
@@ -98,7 +96,7 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <summary>
         /// Configuration options for the instrumentation of Entity Framework Core.
         /// </summary>
-        public static IOpenTracingBuilder ConfigureEntityFrameworkCore(this IOpenTracingBuilder builder, Action<EntityFrameworkCoreOptions> options)
+        public static IOpenTracingBuilder ConfigureEntityFrameworkCore(this IOpenTracingBuilder builder, Action<EntityFrameworkCoreDiagnosticOptions> options)
         {
             if (builder == null)
                 throw new ArgumentNullException(nameof(builder));

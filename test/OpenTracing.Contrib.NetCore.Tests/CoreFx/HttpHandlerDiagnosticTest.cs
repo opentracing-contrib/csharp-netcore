@@ -4,6 +4,7 @@ using System.Net.Http;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using OpenTracing.Contrib.NetCore.CoreFx;
@@ -20,12 +21,11 @@ namespace OpenTracing.Contrib.NetCore.Tests.CoreFx
     {
         private readonly MockTracer _tracer;
         private readonly HttpHandlerDiagnosticOptions _options;
-        private readonly HttpHandlerDiagnostics _interceptor;
         private readonly DiagnosticManager _diagnosticsManager;
         private readonly MockHttpMessageHandler _httpHandler;
         private readonly HttpClient _httpClient;
 
-        public class MockHttpMessageHandler : HttpMessageHandler
+        private class MockHttpMessageHandler : HttpMessageHandler
         {
             public Func<HttpRequestMessage, HttpResponseMessage> OnSend = request =>
             {
@@ -48,13 +48,24 @@ namespace OpenTracing.Contrib.NetCore.Tests.CoreFx
 
         public HttpHandlerDiagnosticTest(ITestOutputHelper output)
         {
-            ILoggerFactory loggerFactory = new LoggerFactory().AddXunit(output);
-
             _tracer = new MockTracer();
-
             _options = new HttpHandlerDiagnosticOptions();
 
-            _interceptor = new HttpHandlerDiagnostics(loggerFactory, _tracer, Options.Create(_options));
+            IServiceProvider serviceProvider = new ServiceCollection()
+                .AddLogging(logging =>
+                {
+                    logging.AddXunit(output);
+                })
+                .AddOpenTracingCoreServices(builder =>
+                {
+                    builder.AddCoreFx();
+                    builder.Services.AddSingleton<ITracer>(_tracer);
+                    builder.Services.AddSingleton(Options.Create(_options));
+                })
+                .BuildServiceProvider();
+
+            _diagnosticsManager = serviceProvider.GetRequiredService<DiagnosticManager>();
+            _diagnosticsManager.Start();
 
             // Inner handler for mocking the result
             _httpHandler = new MockHttpMessageHandler();
@@ -65,11 +76,6 @@ namespace OpenTracing.Contrib.NetCore.Tests.CoreFx
             HttpMessageHandler diagnosticsHandler = (HttpMessageHandler)constructor.Invoke(new object[] { _httpHandler });
 
             _httpClient = new HttpClient(diagnosticsHandler);
-
-            var diagnosticsOptions = Options.Create(new DiagnosticManagerOptions());
-            _diagnosticsManager = new DiagnosticManager(loggerFactory, _tracer, new DiagnosticSubscriber[] { _interceptor }, diagnosticsOptions);
-
-            _diagnosticsManager.Start();
         }
 
         public void Dispose()

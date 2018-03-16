@@ -11,7 +11,7 @@ namespace OpenTracing.Contrib.NetCore.Internal
     {
         private readonly ILogger _logger;
         private readonly ITracer _tracer;
-        private readonly IEnumerable<DiagnosticSubscriber> _diagnosticSubscribers;
+        private readonly IEnumerable<DiagnosticObserver> _diagnosticSubscribers;
         private readonly DiagnosticManagerOptions _options;
 
         private readonly List<IDisposable> _subscriptions = new List<IDisposable>();
@@ -22,7 +22,7 @@ namespace OpenTracing.Contrib.NetCore.Internal
         public DiagnosticManager(
             ILoggerFactory loggerFactory,
             ITracer tracer,
-            IEnumerable<DiagnosticSubscriber> diagnosticSubscribers,
+            IEnumerable<DiagnosticObserver> diagnosticSubscribers,
             IOptions<DiagnosticManagerOptions> options)
         {
             if (loggerFactory == null)

@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Http;
 
 namespace OpenTracing.Contrib.NetCore.AspNetCore
 {
-    public class RequestDiagnosticOptions
+    public class HostingOptions
     {
         public const string DefaultComponent = "HttpIn";
 
