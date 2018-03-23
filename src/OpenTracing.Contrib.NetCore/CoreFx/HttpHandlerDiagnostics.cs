@@ -37,13 +37,13 @@ namespace OpenTracing.Contrib.NetCore.CoreFx
             _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
         }
 
-        protected override void OnNext(string eventName, object arg)
+        protected override void OnNext(string eventName, object untypedArg)
         {
             switch (eventName)
             {
                 case "System.Net.Http.HttpRequestOut.Start":
                     {
-                        var request = (HttpRequestMessage)_activityStart_RequestFetcher.Fetch(arg);
+                        var request = (HttpRequestMessage)_activityStart_RequestFetcher.Fetch(untypedArg);
 
                         if (IgnoreRequest(request))
                         {
@@ -53,34 +53,34 @@ namespace OpenTracing.Contrib.NetCore.CoreFx
 
                         string operationName = _options.OperationNameResolver(request);
 
-                        ISpan span = Tracer.BuildSpan(operationName)
+                        var scope = Tracer.BuildSpan(operationName)
                             .WithTag(Tags.SpanKind.Key, Tags.SpanKindClient)
                             .WithTag(Tags.Component.Key, _options.ComponentName)
                             .WithTag(Tags.HttpMethod.Key, request.Method.ToString())
                             .WithTag(Tags.HttpUrl.Key, request.RequestUri.ToString())
                             .WithTag(Tags.PeerHostname.Key, request.RequestUri.Host)
                             .WithTag(Tags.PeerPort.Key, request.RequestUri.Port)
-                            .Start();
+                            .StartActive(false);
 
-                        _options.OnRequest?.Invoke(span, request);
+                        _options.OnRequest?.Invoke(scope.Span, request);
 
                         if (_options.InjectEnabled?.Invoke(request) ?? true)
                         {
-                            Tracer.Inject(span.Context, BuiltinFormats.HttpHeaders, new HttpHeadersInjectAdapter(request.Headers));
+                            Tracer.Inject(scope.Span.Context, BuiltinFormats.HttpHeaders, new HttpHeadersInjectAdapter(request.Headers));
                         }
 
                         // This throws if there's already an item with the same key. We do this for now to get notified of potential bugs.
-                        request.Properties.Add(PropertiesKey, span);
+                        request.Properties.Add(PropertiesKey, scope.Span);
                     }
                     break;
 
                 case "System.Net.Http.Exception":
                     {
-                        var request = (HttpRequestMessage)_exception_RequestFetcher.Fetch(arg);
+                        var request = (HttpRequestMessage)_exception_RequestFetcher.Fetch(untypedArg);
 
                         if (request.Properties.TryGetValue(PropertiesKey, out object objSpan) && objSpan is ISpan span)
                         {
-                            var exception = (Exception)_exception_ExceptionFetcher.Fetch(arg);
+                            var exception = (Exception)_exception_ExceptionFetcher.Fetch(untypedArg);
 
                             span.SetException(exception);
                         }
@@ -89,12 +89,12 @@ namespace OpenTracing.Contrib.NetCore.CoreFx
 
                 case "System.Net.Http.HttpRequestOut.Stop":
                     {
-                        var request = (HttpRequestMessage)_activityStop_RequestFetcher.Fetch(arg);
+                        var request = (HttpRequestMessage)_activityStop_RequestFetcher.Fetch(untypedArg);
 
                         if (request.Properties.TryGetValue(PropertiesKey, out object objSpan) && objSpan is ISpan span)
                         {
-                            var response = (HttpResponseMessage)_activityStop_ResponseFetcher.Fetch(arg);
-                            var requestTaskStatus = (TaskStatus)_activityStop_RequestTaskStatusFetcher.Fetch(arg);
+                            var response = (HttpResponseMessage)_activityStop_ResponseFetcher.Fetch(untypedArg);
+                            var requestTaskStatus = (TaskStatus)_activityStop_RequestTaskStatusFetcher.Fetch(untypedArg);
 
                             if (response != null)
                             {
