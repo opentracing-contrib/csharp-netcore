@@ -34,7 +34,7 @@ namespace OpenTracing.Contrib.NetCore.Logging
         {
             if (formatter == null)
             {
-                // This throws an Exception e.g. in Microsoft's DebugLogger but I don't want the app to crash if the logger has an issue.
+                // This throws an Exception e.g. in Microsoft's DebugLogger but we don't want the app to crash if the logger has an issue.
                 return;
             }
 
@@ -51,50 +51,77 @@ namespace OpenTracing.Contrib.NetCore.Logging
                 return;
             }
 
-            string message = formatter(state, exception);
-
             var fields = new Dictionary<string, object>
             {
                 { "component", _categoryName },
-                { "level", logLevel.ToString() },
-                { LogFields.Message, message }
+                { "level", logLevel.ToString() }
             };
 
-            if (eventId.Id != 0)
+            try
             {
-                fields.Add("eventId", eventId.Id);
-            }
-
-            if (exception != null)
-            {
-                fields.Add(LogFields.ErrorKind, exception.GetType().Name);
-                fields.Add(LogFields.ErrorObject, exception);
-            }
-
-            string eventName = null;
-
-            var structure = state as IEnumerable<KeyValuePair<string, object>>;
-            if (structure != null)
-            {
-                foreach (var property in structure)
+                if (eventId.Id != 0)
                 {
-                    if (property.Key == OriginalFormatPropertyName && property.Value is string messageTemplateString)
+                    fields["eventId"] = eventId.Id;
+                }
+
+                try
+                {
+                    // This throws if the argument count (message format vs. actual args) doesn't match.
+                    // e.g. LogInformation("Foo {Arg1} {Arg2}", arg1);
+                    // We want to preserve as much as possible from the original log message so we just continue without this information.
+                    string message = formatter(state, exception);
+                    fields[LogFields.Message] = message;
+                }
+                catch (Exception)
+                {
+                    /* no-op */
+                }
+
+                if (exception != null)
+                {
+                    fields[LogFields.ErrorKind] = exception.GetType().FullName;
+                    fields[LogFields.ErrorObject] = exception;
+                }
+
+                bool eventAdded = false;
+
+                var structure = state as IEnumerable<KeyValuePair<string, object>>;
+                if (structure != null)
+                {
+                    try
                     {
-                        eventName = messageTemplateString;
+                        // The enumerator throws if the argument count (message format vs. actual args) doesn't match.
+                        // We want to preserve as much as possible from the original log message so we just ignore
+                        // this error and take as many properties as possible.
+                        foreach (var property in structure)
+                        {
+                            if (string.Equals(property.Key, OriginalFormatPropertyName, StringComparison.Ordinal)
+                                 && property.Value is string messageTemplateString)
+                            {
+                                fields[LogFields.Event] = messageTemplateString;
+                                eventAdded = true;
+                            }
+                            else
+                            {
+                                fields[property.Key] = property.Value;
+                            }
+                        }
                     }
-                    else
+                    catch (IndexOutOfRangeException)
                     {
-                        fields.Add(property.Key, property.Value);
+                        /* no-op */
                     }
                 }
-            }
 
-            if (eventName == null)
+                if (!eventAdded)
+                {
+                    fields[LogFields.Event] = "log";
+                }
+            }
+            catch (Exception logException)
             {
-                eventName = "log";
+                fields["opentracing.contrib.netcore.error"] = logException.ToString();
             }
-
-            fields.Add(LogFields.Event, eventName);
 
             span.Log(fields);
         }
