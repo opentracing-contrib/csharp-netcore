@@ -1,6 +1,7 @@
 {
     "recommendations": [
         "EditorConfig.EditorConfig",
+        "formulahendry.dotnet-test-explorer",
         "ms-vscode.csharp",
         "ms-vscode.powershell"
     ]
