@@ -11,6 +11,8 @@ This project currently only supports apps targeting `netcoreapp2.0` (.NET Core 2
 
 ## Supported libraries and frameworks
 
+#### DiagnosticSource based instrumentation
+
 This project supports any library or framework that uses .NET's [`DiagnosticSource`](https://github.com/dotnet/corefx/blob/master/src/System.Diagnostics.DiagnosticSource/src/DiagnosticSourceUsersGuide.md)
 to instrument its code. It will create a span for every [`Activity`](https://github.com/dotnet/corefx/blob/master/src/System.Diagnostics.DiagnosticSource/src/ActivityUserGuide.md)
 and it will create `span.Log` calls for all other diagnostic events.
@@ -21,6 +23,11 @@ To further improve the tracing output, the library provides enhanced instrumenta
 * ASP.NET Core
 * Entity Framework Core
 * .NET Core BCL types (HttpClient)
+
+#### Microsoft.Extensions.Logging based instrumentation
+
+This project also adds itself as a logger provider for logging events from the `Microsoft.Extensions.Logging` system.
+It will create `span.Log` calls for each logging event, however it will only create them if there is an active span (`ITracer.ActiveSpan`).
 
 ## Usage
 
