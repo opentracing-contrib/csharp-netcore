@@ -2,7 +2,7 @@
   <PropertyGroup>
     <VersionPrefix>0.2.0</VersionPrefix>
     <Authors>Christian Weiss</Authors>
-    <!-- <PackageIconUrl>https://avatars0.githubusercontent.com/u/15482765</PackageIconUrl> -->
+    <PackageIconUrl>https://avatars0.githubusercontent.com/u/15482765</PackageIconUrl>
     <PackageProjectUrl>https://github.com/opentracing-contrib/csharp-netcore</PackageProjectUrl>
     <PackageLicenseUrl>https://raw.githubusercontent.com/opentracing-contrib/csharp-netcore/master/LICENSE</PackageLicenseUrl>
     <PackageReleaseNotes>https://github.com/opentracing-contrib/csharp-netcore/releases</PackageReleaseNotes>
