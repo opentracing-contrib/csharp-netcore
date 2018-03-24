@@ -6,7 +6,7 @@ using OpenTracing.Contrib.NetCore.Configuration;
 using OpenTracing.Contrib.NetCore.CoreFx;
 using OpenTracing.Contrib.NetCore.EntityFrameworkCore;
 using OpenTracing.Contrib.NetCore.Internal;
-using OpenTracing.Contrib.NetCore.Internal.Logging;
+using OpenTracing.Contrib.NetCore.Logging;
 
 namespace Microsoft.Extensions.DependencyInjection
 {

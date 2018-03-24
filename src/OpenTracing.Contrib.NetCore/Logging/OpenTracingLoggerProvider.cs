@@ -1,7 +1,7 @@
 ﻿using System;
 using Microsoft.Extensions.Logging;
 
-namespace OpenTracing.Contrib.NetCore.Internal.Logging
+namespace OpenTracing.Contrib.NetCore.Logging
 {
     /// <summary>
     /// The provider for the <see cref="OpenTracingLogger"/>.

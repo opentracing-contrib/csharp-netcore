@@ -6,7 +6,7 @@ using System.Text;
 using Microsoft.Extensions.Logging;
 using Xunit.Abstractions;
 
-namespace OpenTracing.Contrib.NetCore.Tests.Logging
+namespace OpenTracing.Contrib.NetCore.Tests.XunitLogging
 {
     public class XunitLoggerProvider : ILoggerProvider
     {
