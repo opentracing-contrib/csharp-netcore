@@ -1,10 +1,7 @@
 # CI Build number is incremental and not related to actual version number of the product
 version: '{build}'
 
-image: Visual Studio 2017
-
-install:
-  -ps: "&([scriptblock]::Create((Invoke-WebRequest -useb 'https://dot.net/v1/dotnet-install.ps1'))) -Channel Current -Version latest"
+image: Visual Studio 2017 Preview
 
 environment:
   global:
