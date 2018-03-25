@@ -6,16 +6,13 @@ image: Visual Studio 2017
 init:
   - cmd: git config --global core.autocrlf true
 
-before_build:
-  - cmd: dotnet --version
-
 build_script:
   - ps: |
         if ($env:APPVEYOR_REPO_TAG -eq $true) {
             $VersionSuffix = ""
         }
         else {
-            $VersionSuffix = "ci" + $env:APPVEYOR_BUILD_NUMBER.PadLeft(4, "0") + "-" + $env:APPVEYOR_REPO_BRANCH
+            $VersionSuffix = "ci" + $env:APPVEYOR_BUILD_NUMBER.PadLeft(4, "0") + "-" + $env:APPVEYOR_REPO_BRANCH.Replace("/", "-")
         }
   - ps: .\build.ps1 -VersionSuffix $VersionSuffix
 
