@@ -23,8 +23,8 @@ namespace TrafficGenerator
                 })
                 .ConfigureServices((hostContext, services) =>
                 {
-                    // Registers and starts Zipkin (see Shared.ZipkinService)
-                    services.AddZipkin();
+                    // Registers and starts Jaeger (see Shared.JaegerServiceCollectionExtensions)
+                    services.AddJaeger();
 
                     services.AddOpenTracing();
 
