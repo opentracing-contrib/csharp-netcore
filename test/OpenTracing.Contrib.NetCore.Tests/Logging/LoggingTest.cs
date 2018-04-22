@@ -1,6 +1,8 @@
 using System;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using NSubstitute;
+using OpenTracing.Contrib.NetCore.Internal;
 using OpenTracing.Mock;
 using Xunit;
 
@@ -20,6 +22,12 @@ namespace OpenTracing.Contrib.NetCore.Tests.Logging
                 {
                     ot.AddLoggerProvider();
                     ot.Services.AddSingleton<ITracer, MockTracer>();
+                    ot.Services.AddSingleton<IGlobalTracerAccessor>(sp =>
+                    {
+                        var globalTracerAccessor = Substitute.For<IGlobalTracerAccessor>();
+                        globalTracerAccessor.GetGlobalTracer().Returns(sp.GetRequiredService<ITracer>());
+                        return globalTracerAccessor;
+                    });
                 })
                 .BuildServiceProvider();
 

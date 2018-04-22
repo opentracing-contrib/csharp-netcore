@@ -39,6 +39,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 throw new ArgumentNullException(nameof(services));
 
             services.TryAddSingleton<ITracer>(GlobalTracer.Instance);
+            services.TryAddSingleton<IGlobalTracerAccessor, GlobalTracerAccessor>();
 
             services.TryAddSingleton<DiagnosticManager>();
             services.TryAddEnumerable(ServiceDescriptor.Singleton<IHostedService, InstrumentationService>());

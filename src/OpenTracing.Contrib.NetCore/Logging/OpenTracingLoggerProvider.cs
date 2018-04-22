@@ -1,5 +1,6 @@
 ﻿using System;
 using Microsoft.Extensions.Logging;
+using OpenTracing.Contrib.NetCore.Internal;
 
 namespace OpenTracing.Contrib.NetCore.Logging
 {
@@ -11,9 +12,16 @@ namespace OpenTracing.Contrib.NetCore.Logging
     {
         private readonly ITracer _tracer;
 
-        public OpenTracingLoggerProvider(ITracer tracer)
+        public OpenTracingLoggerProvider(IGlobalTracerAccessor globalTracerAccessor)
         {
-            _tracer = tracer ?? throw new ArgumentNullException(nameof(tracer));
+            // HACK: We can't use ITracer directly here because this would lead to a StackOverflowException
+            // (due to a circular dependency) if the ITracer needs a ILoggerFactory.
+            // https://github.com/opentracing-contrib/csharp-netcore/issues/14
+
+            if (globalTracerAccessor == null)
+                throw new ArgumentNullException(nameof(globalTracerAccessor));
+
+            _tracer = globalTracerAccessor.GetGlobalTracer();
         }
 
         /// <inheritdoc/>
