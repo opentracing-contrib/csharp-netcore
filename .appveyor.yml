@@ -1,4 +1,4 @@
-# CI Build number is incremental and not related to actual version number of the product
+# AppVeyor Build number is incremental and not related to actual version number of the product
 version: '{build}'
 
 image: Visual Studio 2017 Preview
@@ -17,7 +17,7 @@ build_script:
             $VersionSuffix = ""
         }
         else {
-            $VersionSuffix = "ci" + $env:APPVEYOR_BUILD_NUMBER.PadLeft(4, "0") + "-" + $env:APPVEYOR_REPO_BRANCH.Replace("/", "-")
+            $VersionSuffix = "ci" + $env:APPVEYOR_BUILD_NUMBER.PadLeft(4, "0")
         }
   - ps: .\build.ps1 -VersionSuffix $VersionSuffix
 
@@ -37,7 +37,7 @@ deploy:
   # Create a GitHub release for every tag
   - provider: GitHub
     release: $(appveyor_repo_tag_name)
-    description: "See milestone for changes"
+    description: "See milestone for changes: https://github.com/opentracing-contrib/csharp-netcore/releases"
     draft: true
     prerelease: true
     auth_token:
