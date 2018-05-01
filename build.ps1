@@ -65,9 +65,7 @@ Task "Tests" $RunTests {
     $testsFailed = $false
     Get-ChildItem .\test -Filter *.csproj -Recurse | ForEach-Object {
 
-        Push-Location $_.Directory
-        dotnet xunit -configuration $BuildConfiguration -nobuild
-        Pop-Location
+        dotnet test $_.FullName -c $BuildConfiguration --no-build
 
         if ($LASTEXITCODE -ne 0) { $testsFailed = $true }
     }
