@@ -19,8 +19,8 @@ namespace Samples.OrdersApi
                 .UseUrls(Constants.OrdersUrl)
                 .ConfigureServices(services =>
                 {
-                    // Registers and starts Zipkin (see Shared.ZipkinService)
-                    services.AddZipkin();
+                    // Registers and starts Jaeger (see Shared.JaegerServiceCollectionExtensions)
+                    services.AddJaeger();
 
                     // Enables OpenTracing instrumentation for ASP.NET Core, CoreFx, EF Core
                     services.AddOpenTracing();
