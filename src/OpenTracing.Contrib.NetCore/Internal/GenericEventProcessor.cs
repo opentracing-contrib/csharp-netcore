@@ -43,14 +43,14 @@ namespace OpenTracing.Contrib.NetCore.Internal
         private void HandleActivityStart(string eventName, Activity activity, object untypedArg)
         {
             ISpanBuilder spanBuilder = _tracer.BuildSpan(activity.OperationName)
-                .WithTag(Tags.Component.Key, _listenerName);
+                .WithTag(Tags.Component, _listenerName);
 
             foreach (var tag in activity.Tags)
             {
                 spanBuilder.WithTag(tag.Key, tag.Value);
             }
 
-            spanBuilder.StartActive(finishSpanOnDispose: true);
+            spanBuilder.StartActive();
         }
 
         private void HandleActivityStop(string eventName, Activity activity)

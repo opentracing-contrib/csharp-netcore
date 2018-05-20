@@ -45,10 +45,10 @@ namespace OpenTracing.Contrib.NetCore.AspNetCore
                             : $"Action {actionDescriptor.DisplayName}";
 
                         _tracer.BuildSpan(operationName)
-                            .WithTag(Tags.Component.Key, ActionComponent)
+                            .WithTag(Tags.Component, ActionComponent)
                             .WithTag(ActionTagControllerName, controllerActionDescriptor?.ControllerTypeInfo.FullName)
                             .WithTag(ActionTagActionName, controllerActionDescriptor?.ActionName)
-                            .StartActive(finishSpanOnDispose: true);
+                            .StartActive();
                     }
                     return true;
 
@@ -69,9 +69,9 @@ namespace OpenTracing.Contrib.NetCore.AspNetCore
                         string operationName = $"Result {resultType}";
 
                         _tracer.BuildSpan(operationName)
-                            .WithTag(Tags.Component.Key, ResultComponent)
+                            .WithTag(Tags.Component, ResultComponent)
                             .WithTag(ResultTagType, resultType)
-                            .StartActive(finishSpanOnDispose: true);
+                            .StartActive();
                     }
                     return true;
 

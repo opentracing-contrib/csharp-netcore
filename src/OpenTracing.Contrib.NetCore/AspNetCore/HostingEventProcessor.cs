@@ -52,11 +52,11 @@ namespace OpenTracing.Contrib.NetCore.AspNetCore
 
                             IScope scope = _tracer.BuildSpan(operationName)
                                 .AsChildOf(extractedSpanContext)
-                                .WithTag(Tags.Component.Key, _options.ComponentName)
-                                .WithTag(Tags.SpanKind.Key, Tags.SpanKindServer)
-                                .WithTag(Tags.HttpMethod.Key, request.Method)
-                                .WithTag(Tags.HttpUrl.Key, request.GetDisplayUrl())
-                                .StartActive(finishSpanOnDispose: true);
+                                .WithTag(Tags.Component, _options.ComponentName)
+                                .WithTag(Tags.SpanKind, Tags.SpanKindServer)
+                                .WithTag(Tags.HttpMethod, request.Method)
+                                .WithTag(Tags.HttpUrl, request.GetDisplayUrl())
+                                .StartActive();
 
                             _options.OnRequest?.Invoke(scope.Span, httpContext);
                         }
@@ -82,7 +82,7 @@ namespace OpenTracing.Contrib.NetCore.AspNetCore
                         {
                             var httpContext = (HttpContext)_httpRequestIn_stop_HttpContextFetcher.Fetch(arg);
 
-                            Tags.HttpStatus.Set(scope.Span, httpContext.Response.StatusCode);
+                            scope.Span.SetTag(Tags.HttpStatus, httpContext.Response.StatusCode);
                             scope.Dispose();
                         }
                     }

@@ -54,12 +54,12 @@ namespace OpenTracing.Contrib.NetCore.CoreFx
                         string operationName = _options.OperationNameResolver(request);
 
                         ISpan span = Tracer.BuildSpan(operationName)
-                            .WithTag(Tags.SpanKind.Key, Tags.SpanKindClient)
-                            .WithTag(Tags.Component.Key, _options.ComponentName)
-                            .WithTag(Tags.HttpMethod.Key, request.Method.ToString())
-                            .WithTag(Tags.HttpUrl.Key, request.RequestUri.ToString())
-                            .WithTag(Tags.PeerHostname.Key, request.RequestUri.Host)
-                            .WithTag(Tags.PeerPort.Key, request.RequestUri.Port)
+                            .WithTag(Tags.SpanKind, Tags.SpanKindClient)
+                            .WithTag(Tags.Component, _options.ComponentName)
+                            .WithTag(Tags.HttpMethod, request.Method.ToString())
+                            .WithTag(Tags.HttpUrl, request.RequestUri.ToString())
+                            .WithTag(Tags.PeerHostname, request.RequestUri.Host)
+                            .WithTag(Tags.PeerPort, request.RequestUri.Port)
                             .Start();
 
                         _options.OnRequest?.Invoke(span, request);
@@ -98,12 +98,12 @@ namespace OpenTracing.Contrib.NetCore.CoreFx
 
                             if (response != null)
                             {
-                                span.SetTag(Tags.HttpStatus.Key, (int)response.StatusCode);
+                                span.SetTag(Tags.HttpStatus, (int)response.StatusCode);
                             }
 
                             if (requestTaskStatus == TaskStatus.Canceled || requestTaskStatus == TaskStatus.Faulted)
                             {
-                                span.SetTag(Tags.Error.Key, true);
+                                span.SetTag(Tags.Error, true);
                             }
 
                             span.Finish();
