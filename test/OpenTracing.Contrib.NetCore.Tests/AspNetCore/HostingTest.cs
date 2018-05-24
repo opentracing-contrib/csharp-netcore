@@ -131,7 +131,7 @@ namespace OpenTracing.Contrib.NetCore.Tests.AspNetCore
             Assert.Empty(span.GeneratedErrors);
             Assert.Empty(span.LogEntries);
             Assert.Equal("HTTP GET", span.OperationName);
-            Assert.Equal(0, span.ParentId);
+            Assert.Null(span.ParentId);
             Assert.Empty(span.References);
 
             Assert.Equal(5, span.Tags.Count);
@@ -168,13 +168,13 @@ namespace OpenTracing.Contrib.NetCore.Tests.AspNetCore
             Assert.Single(finishedSpans);
 
             var span = finishedSpans[0];
-            Assert.Equal(100, span.Context.TraceId);
+            Assert.Equal("100", span.Context.TraceId);
             Assert.Single(span.References);
 
             var reference = span.References[0];
             Assert.Equal(References.ChildOf, reference.ReferenceType);
-            Assert.Equal(100, reference.Context.TraceId);
-            Assert.Equal(101, reference.Context.SpanId);
+            Assert.Equal("100", reference.Context.TraceId);
+            Assert.Equal("101", reference.Context.SpanId);
         }
 
         [Fact]

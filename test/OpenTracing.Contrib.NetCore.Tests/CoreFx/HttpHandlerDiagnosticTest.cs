@@ -95,7 +95,7 @@ namespace OpenTracing.Contrib.NetCore.Tests.CoreFx
         public async Task Span_is_child_of_parent()
         {
             // Create parent span
-            using (var scope = _tracer.BuildSpan("parent").StartActive(finishSpanOnDispose: true))
+            using (var scope = _tracer.BuildSpan("parent").StartActive())
             {
                 await _httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Get, new Uri("http://www.example.com/api/values")));
             }
@@ -125,7 +125,7 @@ namespace OpenTracing.Contrib.NetCore.Tests.CoreFx
             Assert.Empty(span.GeneratedErrors);
             Assert.Empty(span.LogEntries);
             Assert.Equal("HTTP GET", span.OperationName);
-            Assert.Equal(0, span.ParentId);
+            Assert.Null(span.ParentId);
             Assert.Empty(span.References);
 
             Assert.Equal(7, span.Tags.Count);

@@ -40,7 +40,7 @@ namespace OpenTracing.Contrib.NetCore.Tests.Logging
         private IScope StartScope(string operationName = "FooOperation")
         {
             return _tracer.BuildSpan(operationName)
-                .StartActive(finishSpanOnDispose: true);
+                .StartActive();
         }
 
         private MockSpan.LogEntry Log(Action actionUnderScope)

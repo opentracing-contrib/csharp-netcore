@@ -15,7 +15,7 @@ namespace OpenTracing.Contrib.NetCore.Internal
             if (span == null || exception == null)
                 return;
 
-            Tags.Error.Set(span, true);
+            span.SetTag(Tags.Error, true);
 
             span.Log(new Dictionary<string, object>(3)
             {

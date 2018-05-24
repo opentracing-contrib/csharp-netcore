@@ -36,13 +36,13 @@ namespace OpenTracing.Contrib.NetCore.EntityFrameworkCore
                         string operationName = _options.OperationNameResolver(args);
 
                         Tracer.BuildSpan(operationName)
-                            .WithTag(Tags.SpanKind.Key, Tags.SpanKindClient)
-                            .WithTag(Tags.Component.Key, _options.ComponentName)
-                            .WithTag(Tags.DbInstance.Key, args.Command.Connection.Database)
-                            .WithTag(Tags.DbStatement.Key, args.Command.CommandText)
+                            .WithTag(Tags.SpanKind, Tags.SpanKindClient)
+                            .WithTag(Tags.Component, _options.ComponentName)
+                            .WithTag(Tags.DbInstance, args.Command.Connection.Database)
+                            .WithTag(Tags.DbStatement, args.Command.CommandText)
                             .WithTag(TagMethod, args.ExecuteMethod.ToString())
                             .WithTag(TagIsAsync, args.IsAsync)
-                            .StartActive(finishSpanOnDispose: true);
+                            .StartActive();
                     }
                     break;
 

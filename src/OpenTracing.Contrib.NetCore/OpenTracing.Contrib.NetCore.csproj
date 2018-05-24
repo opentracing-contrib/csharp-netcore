@@ -14,7 +14,7 @@ Instrumented components: HttpClient calls, ASP.NET Core, Entity Framework Core a
     <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="2.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="2.0.0" />
     <PackageReference Include="Microsoft.Extensions.Options" Version="2.0.0" />
-    <PackageReference Include="OpenTracing" Version="0.11.0" />
+    <PackageReference Include="OpenTracing" Version="0.12.0" />
   </ItemGroup>
 
   <ItemGroup>
