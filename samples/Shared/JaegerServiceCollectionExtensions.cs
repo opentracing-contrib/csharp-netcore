@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Reflection;
-using Jaeger.Core;
-using Jaeger.Core.Metrics;
-using Jaeger.Core.Reporters;
-using Jaeger.Core.Samplers;
-using Jaeger.Transport.Thrift.Transport;
+using Jaeger;
+using Jaeger.Metrics;
+using Jaeger.Samplers;
 using Microsoft.Extensions.Logging;
 using OpenTracing;
 using OpenTracing.Contrib.NetCore.CoreFx;
@@ -21,30 +19,23 @@ namespace Microsoft.Extensions.DependencyInjection
             if (services == null)
                 throw new ArgumentNullException(nameof(services));
 
-            // TODO !!!!
-            // services.AddSingleton<ITracer>(serviceProvider =>
-            // {
-            //     string serviceName = Assembly.GetEntryAssembly().GetName().Name;
+            services.AddSingleton<ITracer>(serviceProvider =>
+            {
+                string serviceName = Assembly.GetEntryAssembly().GetName().Name;
 
-            //     ILoggerFactory loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
+                ILoggerFactory loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
 
-            //     ISampler sampler = new ConstSampler(sample: true);
+                ISampler sampler = new ConstSampler(sample: true);
 
-            //     IReporter reporter = new RemoteReporter.Builder(new JaegerHttpTransport(_jaegerUri, batchSize: 3))
-            //         .WithMetricsFactory(NoopMetricsFactory.Instance)
-            //         .WithLoggerFactory(loggerFactory)
-            //         .Build();
+                ITracer tracer = new Tracer.Builder(serviceName)
+                    .WithLoggerFactory(loggerFactory)
+                    .WithSampler(sampler)
+                    .Build();
 
-            //     ITracer tracer = new Tracer.Builder(serviceName)
-            //         .WithLoggerFactory(loggerFactory)
-            //         .WithSampler(sampler)
-            //         .WithReporter(reporter)
-            //         .Build();
+                GlobalTracer.Register(tracer);
 
-            //     GlobalTracer.Register(tracer);
-
-            //     return tracer;
-            // });
+                return tracer;
+            });
 
             // Prevent endless loops when OpenTracing is tracking HTTP requests to Jaeger.
             services.Configure<HttpHandlerDiagnosticOptions>(options =>
