@@ -1,4 +1,15 @@
 using System.Runtime.CompilerServices;
 
-[assembly: InternalsVisibleTo("OpenTracing.Contrib.NetCore.Tests")]
-[assembly: InternalsVisibleTo("OpenTracing.Contrib.NetCore.Benchmarks")]
+[assembly: InternalsVisibleTo("OpenTracing.Contrib.NetCore.Tests, PublicKey=" +
+"00240000048000009400000006020000002400005253413100040000010001005d933a901e4687" +
+"a5fad68c57b11f12b925922968cb9b7c4ef5744b4e3c7d7535095fb13a87169a4dde0ef547a035" +
+"0089ae94e192dfeddfa8272b12a76cd42bd36d8b7003bfff49bc825c1a9d510b3c37549efac581" +
+"0194d6cfdac8c4dc2f465e4c893a32b65a2f2d55faa3d24d6e68d861a7ccdec74d80ccf03b4489" +
+"f51328ba")]
+
+[assembly: InternalsVisibleTo("OpenTracing.Contrib.NetCore.Benchmarks, PublicKey=" +
+"00240000048000009400000006020000002400005253413100040000010001005d933a901e4687" +
+"a5fad68c57b11f12b925922968cb9b7c4ef5744b4e3c7d7535095fb13a87169a4dde0ef547a035" +
+"0089ae94e192dfeddfa8272b12a76cd42bd36d8b7003bfff49bc825c1a9d510b3c37549efac581" +
+"0194d6cfdac8c4dc2f465e4c893a32b65a2f2d55faa3d24d6e68d861a7ccdec74d80ccf03b4489" +
+"f51328ba")]

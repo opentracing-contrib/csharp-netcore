@@ -1,6 +1,5 @@
 ﻿[CmdletBinding(PositionalBinding = $false)]
 param(
-    [string] $VersionSuffix = "loc" + ((Get-Date).ToUniversalTime().ToString("yyyyMMddHHmm")),
     [string] $ArtifactsPath = (Join-Path $PWD "artifacts"),
     [string] $BuildConfiguration = "Release",
 
@@ -40,7 +39,6 @@ Task "Init" $true {
     if ($BuildConfiguration -eq $null) { throw "Property 'BuildConfiguration' may not be null." }
     if ((Get-Command "dotnet" -ErrorAction SilentlyContinue) -eq $null) { throw "'dotnet' command not found. Is .NET Core SDK installed?" }
 
-    Write-Host "VersionSuffix: $VersionSuffix"
     Write-Host "ArtifactsPath: $ArtifactsPath"
     Write-Host "BuildConfiguration: $BuildConfiguration"
     Write-Host ".NET Core SDK: $(dotnet --version)`n"
@@ -54,7 +52,6 @@ Task "Build" $RunBuild {
 
     dotnet msbuild "/t:Restore;Build;Pack" "/p:CI=true" `
         "/p:Configuration=$BuildConfiguration" `
-        "/p:VersionSuffix=$VersionSuffix" `
         "/p:PackageOutputPath=$(Join-Path $ArtifactsPath "nuget")"
 
     if ($LASTEXITCODE -ne 0) { throw "Build failed." }
@@ -63,14 +60,15 @@ Task "Build" $RunBuild {
 Task "Tests" $RunTests {
 
     $testsFailed = $false
-    Get-ChildItem .\test -Filter *.csproj -Recurse | ForEach-Object {
+    Get-ChildItem -Filter *.csproj -Recurse | ForEach-Object {
 
-        dotnet test $_.FullName -c $BuildConfiguration --no-build
-
-        if ($LASTEXITCODE -ne 0) { $testsFailed = $true }
+        if (Select-Xml -Path $_.FullName -XPath "/Project/ItemGroup/PackageReference[@Include='Microsoft.NET.Test.Sdk']") {
+            dotnet test $_.FullName -c $BuildConfiguration --no-build
+            if ($LASTEXITCODE -ne 0) { $testsFailed = $true }
+        }
     }
 
-    if ($testsFailed) { throw "At least one test failed. See output for details." }
+    if ($testsFailed) { throw "At least one test failed." }
 }
 
 Write-Host "`nBuild finished in $($Stopwatch.Elapsed.TotalSeconds) sec." -ForegroundColor Green

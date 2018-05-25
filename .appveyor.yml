@@ -3,23 +3,16 @@ version: '{build}'
 
 image: Visual Studio 2017 Preview
 
+init:
+  - cmd: git config --global core.autocrlf true
+
 environment:
   global:
     DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
     DOTNET_CLI_TELEMETRY_OPTOUT: 1
 
-init:
-  - cmd: git config --global core.autocrlf true
-
 build_script:
-  - ps: |
-        if ($env:APPVEYOR_REPO_TAG -eq $true) {
-            $VersionSuffix = ""
-        }
-        else {
-            $VersionSuffix = "ci" + $env:APPVEYOR_BUILD_NUMBER.PadLeft(4, "0")
-        }
-  - ps: .\build.ps1 -VersionSuffix $VersionSuffix
+  - ps: .\build.ps1
 
 test: off
 
@@ -32,15 +25,3 @@ nuget:
   account_feed: true
   project_feed: true
   disable_publish_on_pr: true
-
-deploy:
-  # Create a GitHub release for every tag
-  - provider: GitHub
-    release: $(appveyor_repo_tag_name)
-    description: "See milestone for changes: https://github.com/opentracing-contrib/csharp-netcore/releases"
-    draft: true
-    prerelease: true
-    auth_token:
-      secure: VD2KNkqKnAIEm3QWxqCLC3KaVrQjfxsaV9NiuLCvrTEAk4p5ZmI462RA4qoB21KS
-    on:
-      appveyor_repo_tag: true
