@@ -4,6 +4,7 @@
   <PropertyGroup>
     <NoWarn>$(NoWarn);CS1591</NoWarn>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <IsPackable>true</IsPackable>
 
     <!-- SourceLink support -->
     <DebugType>portable</DebugType>
