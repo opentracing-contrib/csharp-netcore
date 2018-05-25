@@ -1,11 +1,11 @@
 <Project>
+  <Import Project="version.props" />
   <PropertyGroup>
-    <VersionPrefix>0.4.0</VersionPrefix>
     <Authors>Christian Weiss</Authors>
     <PackageIconUrl>https://avatars0.githubusercontent.com/u/15482765</PackageIconUrl>
     <PackageProjectUrl>https://github.com/opentracing-contrib/csharp-netcore</PackageProjectUrl>
     <PackageLicenseUrl>https://raw.githubusercontent.com/opentracing-contrib/csharp-netcore/master/LICENSE</PackageLicenseUrl>
-    <PackageReleaseNotes>https://github.com/opentracing-contrib/csharp-netcore/releases</PackageReleaseNotes>
+    <PackageReleaseNotes Condition="'$(Version)' != ''">https://github.com/opentracing-contrib/csharp-netcore/releases/tag/$(Version)</PackageReleaseNotes>
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>git://github.com/opentracing-contrib/csharp-netcore</RepositoryUrl>
 
@@ -14,6 +14,9 @@
 
     <LangVersion>latest</LangVersion>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)SignKey.snk</AssemblyOriginatorKeyFile>
+    <PublicSign Condition=" '$(OS)' != 'Windows_NT' ">true</PublicSign>
   </PropertyGroup>
 
 </Project>
