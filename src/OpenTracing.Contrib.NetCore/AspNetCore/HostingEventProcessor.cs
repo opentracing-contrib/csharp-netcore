@@ -96,16 +96,17 @@ namespace OpenTracing.Contrib.NetCore.AspNetCore
 
         private static string GetDisplayUrl(HttpRequest request)
         {
-            if(request.Host.HasValue)
+            if (request.Host.HasValue)
+            {
                 return request.GetDisplayUrl();
+            }
 
             // HTTP 1.0 requests are not required to provide a Host to be valid
             // Since this is just for display, we can provide a string that is
             // not an actual Uri with only the fields that are specified.
             // request.GetDisplayUrl(), used above, will throw an exception
             // if request.Host is null.
-            var host = request.Host.HasValue ? request.Host.Value : NoHostSpecified;
-            return $"{request.Scheme}://{host}{request.PathBase.Value}{request.Path.Value}{request.QueryString.Value}";
+            return $"{request.Scheme}://{NoHostSpecified}{request.PathBase.Value}{request.Path.Value}{request.QueryString.Value}";
         }
 
         private bool ShouldIgnore(HttpContext httpContext)
