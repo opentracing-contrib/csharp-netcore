@@ -9,10 +9,10 @@ namespace Samples.OrdersApi
     {
         public static void Main(string[] args)
         {
-            BuildWebHost(args).Run();
+            CreateWebHostBuilder(args).Build().Run();
         }
 
-        public static IWebHost BuildWebHost(string[] args)
+        public static IWebHostBuilder CreateWebHostBuilder(string[] args)
         {
             return WebHost.CreateDefaultBuilder(args)
                 .UseStartup<Startup>()
@@ -24,8 +24,7 @@ namespace Samples.OrdersApi
 
                     // Enables OpenTracing instrumentation for ASP.NET Core, CoreFx, EF Core
                     services.AddOpenTracing();
-                })
-                .Build();
+                });
         }
     }
 }
