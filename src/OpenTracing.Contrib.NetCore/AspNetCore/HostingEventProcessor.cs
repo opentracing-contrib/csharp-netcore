@@ -14,6 +14,8 @@ namespace OpenTracing.Contrib.NetCore.AspNetCore
         private static readonly PropertyFetcher _httpRequestIn_stop_HttpContextFetcher = new PropertyFetcher("HttpContext");
         private static readonly PropertyFetcher _unhandledException_ExceptionFetcher = new PropertyFetcher("exception");
 
+        internal static readonly string NoHostSpecified = String.Empty;
+
         private readonly ITracer _tracer;
         private readonly ILogger _logger;
         private readonly HostingOptions _options;
@@ -55,7 +57,7 @@ namespace OpenTracing.Contrib.NetCore.AspNetCore
                                 .WithTag(Tags.Component, _options.ComponentName)
                                 .WithTag(Tags.SpanKind, Tags.SpanKindServer)
                                 .WithTag(Tags.HttpMethod, request.Method)
-                                .WithTag(Tags.HttpUrl, request.GetDisplayUrl())
+                                .WithTag(Tags.HttpUrl, GetDisplayUrl(request))
                                 .StartActive();
 
                             _options.OnRequest?.Invoke(scope.Span, httpContext);
@@ -90,6 +92,21 @@ namespace OpenTracing.Contrib.NetCore.AspNetCore
 
                 default: return false;
             }
+        }
+
+        private static string GetDisplayUrl(HttpRequest request)
+        {
+            if (request.Host.HasValue)
+            {
+                return request.GetDisplayUrl();
+            }
+
+            // HTTP 1.0 requests are not required to provide a Host to be valid
+            // Since this is just for display, we can provide a string that is
+            // not an actual Uri with only the fields that are specified.
+            // request.GetDisplayUrl(), used above, will throw an exception
+            // if request.Host is null.
+            return $"{request.Scheme}://{NoHostSpecified}{request.PathBase.Value}{request.Path.Value}{request.QueryString.Value}";
         }
 
         private bool ShouldIgnore(HttpContext httpContext)
