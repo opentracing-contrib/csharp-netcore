@@ -22,8 +22,9 @@ namespace OpenTracing.Contrib.NetCore.AspNetCore
 
         protected override string GetListenerName() => DiagnosticListenerName;
 
-        public AspNetCoreDiagnostics(ILoggerFactory loggerFactory, ITracer tracer, IOptions<AspNetCoreDiagnosticOptions> options)
-            : base(loggerFactory, tracer)
+        public AspNetCoreDiagnostics(ILoggerFactory loggerFactory, ITracer tracer,
+            IOptions<AspNetCoreDiagnosticOptions> options, IOptions<GenericEventOptions> genericEventOptions)
+            : base(loggerFactory, tracer, genericEventOptions.Value)
         {
             if (options?.Value == null)
                 throw new ArgumentNullException(nameof(options));
