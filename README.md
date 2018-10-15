@@ -1,5 +1,3 @@
-**WARNING: This project is a work in progress and not yet ready for production**
-
 # OpenTracing instrumentation for .NET Core apps
 
 This repository provides OpenTracing instrumentation for .NET Core based applications.
