@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using Microsoft.Extensions.Logging;
+using OpenTracing.Contrib.NetCore.Configuration;
 
 namespace OpenTracing.Contrib.NetCore.Internal
 {
@@ -15,10 +16,13 @@ namespace OpenTracing.Contrib.NetCore.Internal
         /// </summary>
         protected abstract string GetListenerName();
 
-        protected DiagnosticListenerObserver(ILoggerFactory loggerFactory, ITracer tracer)
+        protected DiagnosticListenerObserver(ILoggerFactory loggerFactory, ITracer tracer, GenericEventOptions options)
             : base(loggerFactory, tracer)
         {
-            _genericEventProcessor = new GenericEventProcessor(GetListenerName(), Tracer, Logger);
+            if (!options.IsIgnored(GetListenerName()))
+            {
+                _genericEventProcessor = new GenericEventProcessor(GetListenerName(), Tracer, Logger, options);
+            }
         }
 
         public override IDisposable SubscribeIfMatch(DiagnosticListener diagnosticListener)
@@ -60,7 +64,7 @@ namespace OpenTracing.Contrib.NetCore.Internal
 
         protected void ProcessUnhandledEvent(string eventName, object untypedArg)
         {
-            _genericEventProcessor.ProcessEvent(eventName, untypedArg);
+            _genericEventProcessor?.ProcessEvent(eventName, untypedArg);
         }
 
         protected void DisposeActiveScope(bool isScopeRequired, Exception exception = null)
