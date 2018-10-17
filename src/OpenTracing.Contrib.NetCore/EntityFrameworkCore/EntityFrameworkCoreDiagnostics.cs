@@ -2,6 +2,7 @@ using System;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using OpenTracing.Contrib.NetCore.Configuration;
 using OpenTracing.Contrib.NetCore.Internal;
 using OpenTracing.Tag;
 
@@ -19,8 +20,9 @@ namespace OpenTracing.Contrib.NetCore.EntityFrameworkCore
 
         protected override string GetListenerName() => DiagnosticListenerName;
 
-        public EntityFrameworkCoreDiagnostics(ILoggerFactory loggerFactory, ITracer tracer, IOptions<EntityFrameworkCoreDiagnosticOptions> options)
-            : base(loggerFactory, tracer)
+        public EntityFrameworkCoreDiagnostics(ILoggerFactory loggerFactory, ITracer tracer,
+            IOptions<EntityFrameworkCoreDiagnosticOptions> options, IOptions<GenericEventOptions> genericEventOptions)
+            : base(loggerFactory, tracer, genericEventOptions.Value)
         {
             _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
         }
