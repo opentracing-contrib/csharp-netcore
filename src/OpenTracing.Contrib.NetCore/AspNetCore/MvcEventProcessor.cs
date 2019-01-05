@@ -20,11 +20,9 @@ namespace OpenTracing.Contrib.NetCore.AspNetCore
         private const string ResultComponent = "AspNetCore.MvcResult";
         private const string ResultTagType = "result.type";
 
-        private static readonly PropertyFetcher _beforeActionResult_actionContextFetcher = new PropertyFetcher("actionContext");
-        
         private static readonly PropertyFetcher _beforeAction_httpContextFetcher = new PropertyFetcher("httpContext");
-
         private static readonly PropertyFetcher _beforeAction_ActionDescriptorFetcher = new PropertyFetcher("actionDescriptor");
+        private static readonly PropertyFetcher _beforeActionResult_actionContextFetcher = new PropertyFetcher("actionContext");
         private static readonly PropertyFetcher _beforeActionResult_ResultFetcher = new PropertyFetcher("result");
 
         private readonly ITracer _tracer;
