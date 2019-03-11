@@ -63,6 +63,9 @@ namespace Microsoft.Extensions.DependencyInjection
             builder.AddDiagnosticSubscriber<HttpHandlerDiagnostics>();
             builder.ConfigureGenericDiagnostics(options => options.IgnoredListenerNames.Add(HttpHandlerDiagnostics.DiagnosticListenerName));
 
+            builder.AddDiagnosticSubscriber<SqlClientDiagnostics>();
+            builder.ConfigureGenericDiagnostics(options => options.IgnoredListenerNames.Add(SqlClientDiagnostics.DiagnosticListenerName));
+
             return builder;
         }
 
