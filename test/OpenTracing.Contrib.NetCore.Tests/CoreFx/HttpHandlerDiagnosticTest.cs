@@ -212,6 +212,22 @@ namespace OpenTracing.Contrib.NetCore.Tests.CoreFx
         }
 
         [Fact]
+        public async Task Calls_Options_OnError()
+        {
+            bool onErrorCalled = false;
+
+            _options.OnError = (_, __, ___) => onErrorCalled = true;
+
+            var request = new HttpRequestMessage(HttpMethod.Get, new Uri("http://www.example.com/api/values"));
+
+            _httpHandler.OnSend = _ => throw new InvalidOperationException();
+
+            await Assert.ThrowsAsync<InvalidOperationException>(() => _httpClient.SendAsync(request));
+
+            Assert.True(onErrorCalled);
+        }
+
+        [Fact]
         public async Task Creates_error_span_if_request_times_out()
         {
             var request = new HttpRequestMessage(HttpMethod.Get, new Uri("http://www.example.com/api/values"));

@@ -83,6 +83,8 @@ namespace OpenTracing.Contrib.NetCore.CoreFx
                             var exception = (Exception)_exception_ExceptionFetcher.Fetch(arg);
 
                             span.SetException(exception);
+
+                            _options.OnError?.Invoke(span, exception, request);
                         }
                     }
                     break;
