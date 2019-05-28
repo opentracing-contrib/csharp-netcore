@@ -16,8 +16,9 @@ namespace OpenTracing.Contrib.NetCore.CoreFx
 
         private readonly SqlClientDiagnosticOptions _options;
 
-        public SqlClientDiagnostics(ILoggerFactory loggerFactory, ITracer tracer, IOptions<SqlClientDiagnosticOptions> options)
-           : base(loggerFactory, tracer)
+        public SqlClientDiagnostics(ILoggerFactory loggerFactory, ITracer tracer, IOptions<SqlClientDiagnosticOptions> options,
+            IOptions<GenericEventOptions> genericEventOptions)
+           : base(loggerFactory, tracer, genericEventOptions.Value)
         {
             _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
         }
