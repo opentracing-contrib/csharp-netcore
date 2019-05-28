@@ -3,6 +3,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using OpenTracing.Contrib.NetCore.Configuration;
 using OpenTracing.Contrib.NetCore.Internal;
 using OpenTracing.Propagation;
 using OpenTracing.Tag;
@@ -31,8 +32,9 @@ namespace OpenTracing.Contrib.NetCore.CoreFx
 
         protected override string GetListenerName() => DiagnosticListenerName;
 
-        public HttpHandlerDiagnostics(ILoggerFactory loggerFactory, ITracer tracer, IOptions<HttpHandlerDiagnosticOptions> options)
-            : base(loggerFactory, tracer)
+        public HttpHandlerDiagnostics(ILoggerFactory loggerFactory, ITracer tracer,
+            IOptions<HttpHandlerDiagnosticOptions> options, IOptions<GenericEventOptions> genericEventOptions)
+            : base(loggerFactory, tracer, genericEventOptions.Value)
         {
             _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
         }
