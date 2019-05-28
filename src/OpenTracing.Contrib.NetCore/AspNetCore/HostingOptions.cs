@@ -66,5 +66,10 @@ namespace OpenTracing.Contrib.NetCore.AspNetCore
         /// Allows the modification of the created span to e.g. add further tags.
         /// </summary>
         public Action<ISpan, HttpContext> OnRequest { get; set; }
+
+        /// <summary>
+        /// Allows the modification of the created span when error occured to e.g. add further tags.
+        /// </summary>
+        public Action<ISpan, Exception, HttpContext> OnError { get; set; }
     }
 }

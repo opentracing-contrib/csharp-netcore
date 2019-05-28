@@ -48,6 +48,11 @@ namespace OpenTracing.Contrib.NetCore.CoreFx
         /// </summary>
         public Action<ISpan, HttpRequestMessage> OnRequest { get; set; }
 
+        /// <summary>
+        /// Allows the modification of the created span when error occured to e.g. add further tags.
+        /// </summary>
+        public Action<ISpan, Exception, HttpRequestMessage> OnError { get; set; }
+
         public HttpHandlerDiagnosticOptions()
         {
             // Default settings

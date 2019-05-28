@@ -12,6 +12,7 @@ namespace OpenTracing.Contrib.NetCore.AspNetCore
     {
         private static readonly PropertyFetcher _httpRequestIn_start_HttpContextFetcher = new PropertyFetcher("HttpContext");
         private static readonly PropertyFetcher _httpRequestIn_stop_HttpContextFetcher = new PropertyFetcher("HttpContext");
+        private static readonly PropertyFetcher _unhandledException_HttpContextFetcher = new PropertyFetcher("httpContext");
         private static readonly PropertyFetcher _unhandledException_ExceptionFetcher = new PropertyFetcher("exception");
 
         internal static readonly string NoHostSpecified = String.Empty;
@@ -73,6 +74,10 @@ namespace OpenTracing.Contrib.NetCore.AspNetCore
                             var exception = (Exception)_unhandledException_ExceptionFetcher.Fetch(arg);
 
                             span.SetException(exception);
+
+                            var httpContext = (HttpContext)_unhandledException_HttpContextFetcher.Fetch(arg);
+
+                            _options.OnError?.Invoke(span, exception, httpContext);
                         }
                     }
                     return true;

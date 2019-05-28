@@ -231,6 +231,18 @@ namespace OpenTracing.Contrib.NetCore.Tests.AspNetCore
         }
 
         [Fact]
+        public async Task Calls_Options_OnError()
+        {
+            bool onErrorCalled = false;
+            _options.OnError = (_, __, ___) => onErrorCalled = true;
+
+            var exception = new InvalidOperationException("You shall not pass");
+            await ExecuteRequestAsync(exception);
+
+            Assert.True(onErrorCalled);
+        }
+
+        [Fact]
         public async Task Creates_error_span_if_request_throws_exception()
         {
             var exception = new InvalidOperationException("You shall not pass");
