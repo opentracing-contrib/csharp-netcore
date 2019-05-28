@@ -1,4 +1,8 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.Extensions.Logging;
@@ -16,14 +20,18 @@ namespace OpenTracing.Contrib.NetCore.AspNetCore
         private const string ResultComponent = "AspNetCore.MvcResult";
         private const string ResultTagType = "result.type";
 
+        private static readonly PropertyFetcher _beforeAction_httpContextFetcher = new PropertyFetcher("httpContext");
         private static readonly PropertyFetcher _beforeAction_ActionDescriptorFetcher = new PropertyFetcher("actionDescriptor");
+        private static readonly PropertyFetcher _beforeActionResult_actionContextFetcher = new PropertyFetcher("actionContext");
         private static readonly PropertyFetcher _beforeActionResult_ResultFetcher = new PropertyFetcher("result");
 
         private readonly ITracer _tracer;
         private readonly ILogger _logger;
+        private readonly IList<Func<HttpContext, bool>> _ignorePatterns;
 
-        public MvcEventProcessor(ITracer tracer, ILogger logger)
+        public MvcEventProcessor(ITracer tracer, ILogger logger, IList<Func<HttpContext, bool>> ignorePatterns)
         {
+            _ignorePatterns = ignorePatterns;
             _tracer = tracer ?? throw new ArgumentNullException(nameof(tracer));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
@@ -33,6 +41,14 @@ namespace OpenTracing.Contrib.NetCore.AspNetCore
             switch (eventName)
             {
                 case "Microsoft.AspNetCore.Mvc.BeforeAction":
+                {
+                    var httpContext = (HttpContext)_beforeAction_httpContextFetcher.Fetch(arg);
+
+                    if (ShouldIgnore(httpContext))
+                    {
+                        _logger.LogDebug("Ignoring request");
+                    }
+                    else
                     {
                         // NOTE: This event is the start of the action pipeline. The action has been selected, the route
                         //       has been selected but no filters have run and model binding hasn't occured.
@@ -50,6 +66,7 @@ namespace OpenTracing.Contrib.NetCore.AspNetCore
                             .WithTag(ActionTagActionName, controllerActionDescriptor?.ActionName)
                             .StartActive();
                     }
+                }
                     return true;
 
                 case "Microsoft.AspNetCore.Mvc.AfterAction":
@@ -59,6 +76,14 @@ namespace OpenTracing.Contrib.NetCore.AspNetCore
                     return true;
 
                 case "Microsoft.AspNetCore.Mvc.BeforeActionResult":
+                {
+                    var httpContext = ((ActionContext) _beforeActionResult_actionContextFetcher.Fetch(arg)).HttpContext;
+
+                    if (ShouldIgnore(httpContext))
+                    {
+                        _logger.LogDebug("Ignoring request");
+                    }
+                    else
                     {
                         // NOTE: This event is the start of the result pipeline. The action has been executed, but
                         //       we haven't yet determined which view (if any) will handle the request
@@ -73,6 +98,7 @@ namespace OpenTracing.Contrib.NetCore.AspNetCore
                             .WithTag(ResultTagType, resultType)
                             .StartActive();
                     }
+                }
                     return true;
 
                 case "Microsoft.AspNetCore.Mvc.AfterActionResult":
@@ -83,6 +109,11 @@ namespace OpenTracing.Contrib.NetCore.AspNetCore
 
                 default: return false;
             }
+        }
+        
+        private bool ShouldIgnore(HttpContext httpContext)
+        {
+            return _ignorePatterns.Any(ignore => ignore(httpContext));
         }
     }
 }
