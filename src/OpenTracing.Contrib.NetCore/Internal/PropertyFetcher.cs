@@ -1,6 +1,7 @@
 ﻿// From https://github.com/dotnet/corefx/blob/master/src/System.Diagnostics.DiagnosticSource/src/System/Diagnostics/DiagnosticSourceEventSource.cs
 
 using System;
+using System.Linq;
 using System.Reflection;
 
 namespace OpenTracing.Contrib.NetCore.Internal
@@ -28,7 +29,8 @@ namespace OpenTracing.Contrib.NetCore.Internal
             if (objType != _expectedType)
             {
                 TypeInfo typeInfo = objType.GetTypeInfo();
-                _fetchForExpectedType = PropertyFetch.FetcherForProperty(typeInfo.GetDeclaredProperty(_propertyName));
+                var propertyInfo = typeInfo.DeclaredProperties.FirstOrDefault(p => string.Equals(p.Name, _propertyName, StringComparison.InvariantCultureIgnoreCase));
+                _fetchForExpectedType = PropertyFetch.FetcherForProperty(propertyInfo);
                 _expectedType = objType;
             }
             return _fetchForExpectedType.Fetch(obj);
