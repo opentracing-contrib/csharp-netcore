@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using Microsoft.Extensions.Logging;
 using OpenTracing.Contrib.NetCore.Internal;
+using OpenTracing.Noop;
+using OpenTracing.Util;
 
 namespace OpenTracing.Contrib.NetCore.Logging
 {
@@ -9,12 +11,12 @@ namespace OpenTracing.Contrib.NetCore.Logging
     {
         private const string OriginalFormatPropertyName = "{OriginalFormat}";
 
-        private readonly ITracer _tracer;
         private readonly string _categoryName;
+        private readonly IGlobalTracerAccessor _globalTracerAccessor;
 
-        public OpenTracingLogger(ITracer tracer, string categoryName)
+        public OpenTracingLogger(IGlobalTracerAccessor globalTracerAccessor, string categoryName)
         {
-            _tracer = tracer;
+            _globalTracerAccessor = globalTracerAccessor;
             _categoryName = categoryName;
         }
 
@@ -26,8 +28,10 @@ namespace OpenTracing.Contrib.NetCore.Logging
         public bool IsEnabled(LogLevel logLevel)
         {
             // Filtering should be done via the general Logging filtering feature.
-
-            return !_tracer.IsNoopTracer();
+            ITracer tracer = _globalTracerAccessor.GetGlobalTracer();
+            return !(
+                (tracer is NoopTracer) ||
+                (tracer is GlobalTracer && !GlobalTracer.IsRegistered()));
         }
 
         public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
@@ -38,7 +42,8 @@ namespace OpenTracing.Contrib.NetCore.Logging
                 return;
             }
 
-            ISpan span = _tracer.ActiveSpan;
+            ITracer tracer = _globalTracerAccessor.GetGlobalTracer();
+            ISpan span = tracer.ActiveSpan;
 
             if (span == null)
             {
