@@ -10,24 +10,17 @@ namespace OpenTracing.Contrib.NetCore.Logging
     [ProviderAlias("OpenTracing")]
     internal class OpenTracingLoggerProvider : ILoggerProvider
     {
-        private readonly ITracer _tracer;
+        private readonly IGlobalTracerAccessor _globalTracerAccessor;
 
         public OpenTracingLoggerProvider(IGlobalTracerAccessor globalTracerAccessor)
         {
-            // HACK: We can't use ITracer directly here because this would lead to a StackOverflowException
-            // (due to a circular dependency) if the ITracer needs a ILoggerFactory.
-            // https://github.com/opentracing-contrib/csharp-netcore/issues/14
-
-            if (globalTracerAccessor == null)
-                throw new ArgumentNullException(nameof(globalTracerAccessor));
-
-            _tracer = globalTracerAccessor.GetGlobalTracer();
+            _globalTracerAccessor = globalTracerAccessor ?? throw new ArgumentNullException(nameof(globalTracerAccessor));
         }
 
         /// <inheritdoc/>
         public ILogger CreateLogger(string categoryName)
         {
-            return new OpenTracingLogger(_tracer, categoryName);
+            return new OpenTracingLogger(_globalTracerAccessor, categoryName);
         }
 
         public void Dispose()
