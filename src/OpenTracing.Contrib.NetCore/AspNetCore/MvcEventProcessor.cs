@@ -2,9 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.Mvc.Controllers;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Logging;
 using OpenTracing.Contrib.NetCore.Internal;
 using OpenTracing.Tag;
@@ -16,6 +18,8 @@ namespace OpenTracing.Contrib.NetCore.AspNetCore
         private const string ActionComponent = "AspNetCore.MvcAction";
         private const string ActionTagActionName = "action";
         private const string ActionTagControllerName = "controller";
+        private const string ActionTagMethod = "method";
+        private const string ActionTagRoutePattern = "route";
 
         private const string ResultComponent = "AspNetCore.MvcResult";
         private const string ResultTagType = "result.type";
@@ -53,18 +57,35 @@ namespace OpenTracing.Contrib.NetCore.AspNetCore
                         // NOTE: This event is the start of the action pipeline. The action has been selected, the route
                         //       has been selected but no filters have run and model binding hasn't occured.
 
-                        var actionDescriptor = (ActionDescriptor)_beforeAction_ActionDescriptorFetcher.Fetch(arg);
-                        var controllerActionDescriptor = actionDescriptor as ControllerActionDescriptor;
+                        var endpointFeature = httpContext.Features[typeof(IEndpointFeature)] as IEndpointFeature;
+                        if (endpointFeature?.Endpoint is RouteEndpoint endpoint)
+                        {
+                            var routePattern = endpoint.RoutePattern?.RawText;
+                            var operationName = $"Action {endpoint.DisplayName}";
+                            var method = endpoint.Metadata.GetMetadata<HttpMethodMetadata>()?.HttpMethods
+                                ?.FirstOrDefault();
 
-                        string operationName = controllerActionDescriptor != null
-                            ? $"Action {controllerActionDescriptor.ControllerTypeInfo.FullName}/{controllerActionDescriptor.ActionName}"
-                            : $"Action {actionDescriptor.DisplayName}";
+                            _tracer.BuildSpan(operationName)
+                                .WithTag(Tags.Component, ActionComponent)
+                                .WithTag(ActionTagMethod, method)
+                                .WithTag(ActionTagRoutePattern, routePattern)
+                                .StartActive();
+                        }
+                        else
+                        {
+                            var actionDescriptor = (ActionDescriptor)_beforeAction_ActionDescriptorFetcher.Fetch(arg);
+                            var controllerActionDescriptor = actionDescriptor as ControllerActionDescriptor;
 
-                        _tracer.BuildSpan(operationName)
-                            .WithTag(Tags.Component, ActionComponent)
-                            .WithTag(ActionTagControllerName, controllerActionDescriptor?.ControllerTypeInfo.FullName)
-                            .WithTag(ActionTagActionName, controllerActionDescriptor?.ActionName)
-                            .StartActive();
+                            string operationName = controllerActionDescriptor != null
+                                ? $"Action {controllerActionDescriptor.ControllerTypeInfo.FullName}/{controllerActionDescriptor.ActionName}"
+                                : $"Action {actionDescriptor.DisplayName}";
+
+                            _tracer.BuildSpan(operationName)
+                                .WithTag(Tags.Component, ActionComponent)
+                                .WithTag(ActionTagControllerName, controllerActionDescriptor?.ControllerTypeInfo.FullName)
+                                .WithTag(ActionTagActionName, controllerActionDescriptor?.ActionName)
+                                .StartActive();
+                        }
                     }
                 }
                     return true;

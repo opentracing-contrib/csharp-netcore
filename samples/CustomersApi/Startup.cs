@@ -32,7 +32,8 @@ namespace Samples.CustomersApi
                     options.UseSqlite(connection);
                 });
 
-            services.AddMvc();
+            services.AddRouting();
+            services.AddControllers();
         }
 
         public void Configure(IApplicationBuilder app)
@@ -42,7 +43,11 @@ namespace Samples.CustomersApi
 
             app.UseDeveloperExceptionPage();
 
-            app.UseMvc();
+            app.UseRouting();
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapControllers();
+            });
         }
 
         public void BootstrapDataStore(IServiceProvider serviceProvider)

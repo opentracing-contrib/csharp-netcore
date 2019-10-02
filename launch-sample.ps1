@@ -1,6 +1,6 @@
 [CmdletBinding(PositionalBinding = $false)]
 param(
-    [string] $Framework = "netcoreapp2.1"
+    [string] $Framework = "netcoreapp3.0"
 )
 
 dotnet build
@@ -25,7 +25,7 @@ Start-Process `
     -ArgumentList @( "dotnet run -f $Framework --no-build; Read-Host 'Press enter to exit'" ) `
     -WorkingDirectory "samples\FrontendWeb"
 
-if ($Framework -ne "netcoreapp2.0") {
+if ($Framework -ne "netcoreapp3.0") {
     Start-Process `
         -FilePath powershell.exe `
         -ArgumentList @( "dotnet run -f $Framework --no-build; Read-Host 'Press enter to exit'" ) `
