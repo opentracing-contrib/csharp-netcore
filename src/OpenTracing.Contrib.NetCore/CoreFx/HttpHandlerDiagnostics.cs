@@ -112,7 +112,7 @@ namespace OpenTracing.Contrib.NetCore.CoreFx
 
                             span.Finish();
 
-                            request.Properties[PropertiesKey] = null;
+                            request.Properties.Remove(PropertiesKey);
                         }
                     }
                     break;
