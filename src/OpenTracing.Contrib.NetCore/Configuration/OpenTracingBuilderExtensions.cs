@@ -82,6 +82,19 @@ namespace Microsoft.Extensions.DependencyInjection
             return builder;
         }
 
+        public static IOpenTracingBuilder ConfigureGenericEvents(this IOpenTracingBuilder builder, Action<GenericEventOptions> options)
+        {
+            if (builder == null)
+                throw new ArgumentNullException(nameof(builder));
+
+            if (options != null)
+            {
+                builder.Services.Configure(options);
+            }
+
+            return builder;
+        }
+
         /// <summary>
         /// Adds instrumentation for Entity Framework Core.
         /// </summary>
