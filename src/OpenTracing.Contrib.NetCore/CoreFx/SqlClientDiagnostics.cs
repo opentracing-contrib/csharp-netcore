@@ -31,15 +31,17 @@ namespace OpenTracing.Contrib.NetCore.CoreFx
             {
                 case "System.Data.SqlClient.WriteCommandBefore":
                     {
-                        var args = (SqlCommand)_activityCommand_RequestFetcher.Fetch(untypedArg);
+                        var sqlCommand = (SqlCommand)_activityCommand_RequestFetcher.Fetch(untypedArg);
+                        if (!_options.SpanStartDecider(sqlCommand))
+                            return;
 
-                        string operationName = _options.OperationNameResolver(args);
+                        string operationName = _options.OperationNameResolver(sqlCommand);
 
                         Tracer.BuildSpan(operationName)
                             .WithTag(Tags.SpanKind, Tags.SpanKindClient)
                             .WithTag(Tags.Component, _options.ComponentName)
-                            .WithTag(Tags.DbInstance, args.Connection.Database)
-                            .WithTag(Tags.DbStatement, args.CommandText)
+                            .WithTag(Tags.DbInstance, sqlCommand.Connection.Database)
+                            .WithTag(Tags.DbStatement, sqlCommand.CommandText)
                             .StartActive();
                     }
                     break;
@@ -47,13 +49,18 @@ namespace OpenTracing.Contrib.NetCore.CoreFx
                 case "System.Data.SqlClient.WriteCommandError":
                     {
                         Exception ex = (Exception)_exception_ExceptionFetcher.Fetch(untypedArg);
-
+                        var sqlCommand = (SqlCommand)_activityCommand_RequestFetcher.Fetch(untypedArg);
+                        if (!_options.SpanStartDecider(sqlCommand))
+                            return;
                         DisposeActiveScope(isScopeRequired: true, exception: ex);
                     }
                     break;
 
                 case "System.Data.SqlClient.WriteCommandAfter":
                     {
+                        var sqlCommand = (SqlCommand)_activityCommand_RequestFetcher.Fetch(untypedArg);
+                        if (!_options.SpanStartDecider(sqlCommand))
+                            return;
                         DisposeActiveScope(isScopeRequired: true);
                     }
                     break;

@@ -11,6 +11,7 @@ namespace OpenTracing.Contrib.NetCore.CoreFx
 
         private string _componentName = DefaultComponent;
         private Func<SqlCommand, string> _operationNameResolver;
+        private Func<SqlCommand, bool> _spanStartDecider;
 
         /// <summary>
         /// Allows changing the "component" tag of created spans.
@@ -41,6 +42,25 @@ namespace OpenTracing.Contrib.NetCore.CoreFx
                 return _operationNameResolver;
             }
             set => _operationNameResolver = value ?? throw new ArgumentNullException(nameof(OperationNameResolver));
+        }
+
+        /// <summary>
+        /// A delegate that decides if a span will be created for the given command.
+        /// </summary>
+        public Func<SqlCommand, bool> SpanStartDecider
+        {
+            get
+            {
+                if (_spanStartDecider == null)
+                {
+                    _spanStartDecider = (cmd) =>
+                    {
+                        return true;
+                    };
+                }
+                return _spanStartDecider;
+            }
+            set => _spanStartDecider = value ?? throw new ArgumentNullException(nameof(SpanStartDecider));
         }
     }
 }
