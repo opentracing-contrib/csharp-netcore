@@ -27,7 +27,17 @@ namespace Samples.CustomersApi
                     services.AddJaeger();
 
                     // Enables OpenTracing instrumentation for ASP.NET Core, CoreFx, EF Core
-                    services.AddOpenTracing();
+                    services.AddOpenTracing(builder =>
+                    {
+                        builder.ConfigureEntityFrameworkCore(options =>
+                        {
+                            // This is an example for how certain EF Core commands can be ignored.
+                            // As en example, we're ignoring the "PRAGMA foreign_keys=ON;" commands that are executed by Sqlite.
+                            // Remove this code to see those statements.
+                            options.IgnorePatterns.Add(cmd => cmd.Command.CommandText.StartsWith("PRAGMA"));
+                        });
+                    });
+
                 });
         }
     }

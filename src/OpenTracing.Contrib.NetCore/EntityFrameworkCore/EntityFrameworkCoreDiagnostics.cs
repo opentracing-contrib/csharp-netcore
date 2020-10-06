@@ -2,7 +2,6 @@ using System;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using OpenTracing.Contrib.NetCore.Configuration;
 using OpenTracing.Contrib.NetCore.Internal;
 using OpenTracing.Tag;
 
@@ -35,6 +34,12 @@ namespace OpenTracing.Contrib.NetCore.EntityFrameworkCore
                     {
                         CommandEventData args = (CommandEventData)untypedArg;
 
+                        if (IgnoreEvent(args))
+                        {
+                            Logger.LogDebug("Ignoring EF command due to IgnorePatterns");
+                            return;
+                        }
+
                         string operationName = _options.OperationNameResolver(args);
 
                         Tracer.BuildSpan(operationName)
@@ -50,7 +55,7 @@ namespace OpenTracing.Contrib.NetCore.EntityFrameworkCore
 
                 case "Microsoft.EntityFrameworkCore.Database.Command.CommandExecuted":
                     {
-                        DisposeActiveScope(isScopeRequired: true);
+                        DisposeActiveScope(isScopeRequired: false);
                     }
                     break;
 
@@ -60,7 +65,7 @@ namespace OpenTracing.Contrib.NetCore.EntityFrameworkCore
 
                         // The "CommandExecuted" event is NOT called in case of an exception,
                         // so we have to dispose the scope here as well!
-                        DisposeActiveScope(isScopeRequired: true, exception: args.Exception);
+                        DisposeActiveScope(isScopeRequired: false, exception: args.Exception);
                     }
                     break;
 
@@ -70,6 +75,17 @@ namespace OpenTracing.Contrib.NetCore.EntityFrameworkCore
                     }
                     break;
             }
+        }
+
+        private bool IgnoreEvent(CommandEventData eventData)
+        {
+            foreach (Func<CommandEventData, bool> ignore in _options.IgnorePatterns)
+            {
+                if (ignore(eventData))
+                    return true;
+            }
+
+            return false;
         }
     }
 }
