@@ -26,7 +26,7 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <summary>
         /// Adds instrumentation for ASP.NET Core.
         /// </summary>
-        public static IOpenTracingBuilder AddAspNetCore(this IOpenTracingBuilder builder, Action<AspNetCoreDiagnosticOptions> options = null)
+        public static IOpenTracingBuilder AddAspNetCore(this IOpenTracingBuilder builder)
         {
             if (builder == null)
                 throw new ArgumentNullException(nameof(builder));
@@ -34,6 +34,15 @@ namespace Microsoft.Extensions.DependencyInjection
             builder.AddDiagnosticSubscriber<AspNetCoreDiagnostics>();
             builder.ConfigureGenericDiagnostics(genericOptions => genericOptions.IgnoredListenerNames.Add(AspNetCoreDiagnostics.DiagnosticListenerName));
 
+            return builder;
+        }
+
+        /// <summary>
+        /// Adds instrumentation for ASP.NET Core.
+        /// </summary>
+        public static IOpenTracingBuilder AddAspNetCore(this IOpenTracingBuilder builder, Action<AspNetCoreDiagnosticOptions> options)
+        {
+            AddAspNetCore(builder);
             return ConfigureAspNetCore(builder, options);
         }
 
@@ -111,7 +120,7 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <summary>
         /// Adds instrumentation for Entity Framework Core.
         /// </summary>
-        public static IOpenTracingBuilder AddEntityFrameworkCore(this IOpenTracingBuilder builder, Action<EntityFrameworkCoreDiagnosticOptions> options = null)
+        public static IOpenTracingBuilder AddEntityFrameworkCore(this IOpenTracingBuilder builder)
         {
             if (builder == null)
                 throw new ArgumentNullException(nameof(builder));
@@ -119,6 +128,15 @@ namespace Microsoft.Extensions.DependencyInjection
             builder.AddDiagnosticSubscriber<EntityFrameworkCoreDiagnostics>();
             builder.ConfigureGenericDiagnostics(genericOptions => genericOptions.IgnoredListenerNames.Add(EntityFrameworkCoreDiagnostics.DiagnosticListenerName));
 
+            return builder;
+        }
+
+        /// <summary>
+        /// Adds instrumentation for Entity Framework Core.
+        /// </summary>
+        public static IOpenTracingBuilder AddEntityFrameworkCore(this IOpenTracingBuilder builder, Action<EntityFrameworkCoreDiagnosticOptions> options)
+        {
+            AddEntityFrameworkCore(builder);
             return ConfigureEntityFrameworkCore(builder, options);
         }
 

@@ -6,9 +6,12 @@ namespace OpenTracing.Contrib.NetCore.EntityFrameworkCore
 {
     public class EntityFrameworkCoreDiagnosticOptions
     {
+        // NOTE: Everything here that references any EFCore types MUST NOT be initialized in the constructor as that would throw on applications that don't reference EFCore.
+
         public const string DefaultComponent = "EFCore";
 
         private string _componentName = DefaultComponent;
+        private List<Func<CommandEventData, bool>> _ignorePatterns;
         private Func<CommandEventData, string> _operationNameResolver;
 
         /// <summary>
@@ -16,7 +19,7 @@ namespace OpenTracing.Contrib.NetCore.EntityFrameworkCore
         /// <para/>
         /// If any delegate in the list returns <c>true</c>, the EF Core command will be ignored.
         /// </summary>
-        public List<Func<CommandEventData, bool>> IgnorePatterns { get; } = new List<Func<CommandEventData, bool>>();
+        public List<Func<CommandEventData, bool>> IgnorePatterns => _ignorePatterns ??= new List<Func<CommandEventData, bool>>();
 
         /// <summary>
         /// Allows changing the "component" tag of created spans.
