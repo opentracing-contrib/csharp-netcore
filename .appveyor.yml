@@ -19,6 +19,8 @@ test: off
 artifacts:
   - path: artifacts\nuget\*.nupkg
     name: NuGet
+  - path: artifacts\nuget\*.snupkg
+    name: Symbols
 
 # Deploy every successful build (except PRs) to development feed
 nuget:
