@@ -7,7 +7,7 @@ It can be used with any OpenTracing compatible tracer.
 
 ## Supported .NET versions
 
-This project currently only supports apps targeting `netcoreapp2.0` (.NET Core 2.0) or higher!
+This project currently only supports apps targeting `netcoreapp2.1` (.NET Core 2.1) or higher!
 
 ## Supported libraries and frameworks
 
