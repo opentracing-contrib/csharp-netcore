@@ -21,10 +21,14 @@ namespace Microsoft.Extensions.DependencyInjection
 
             return services.AddOpenTracingCoreServices(otBuilder =>
             {
-                otBuilder.AddAspNetCore()
-                    .AddCoreFx()
-                    .AddEntityFrameworkCore()
-                    .AddLoggerProvider();
+                otBuilder.AddCoreFx();
+                otBuilder.AddLoggerProvider();
+                otBuilder.AddEntityFrameworkCore();
+
+                if (AssemblyExists("Microsoft.AspNetCore.Hosting"))
+                {
+                    otBuilder.AddAspNetCore();
+                }
 
                 builder?.Invoke(otBuilder);
             });
@@ -49,6 +53,17 @@ namespace Microsoft.Extensions.DependencyInjection
             builder?.Invoke(builderInstance);
 
             return services;
+        }
+
+        private static bool AssemblyExists(string assemblyName)
+        {
+            var assemblies = AppDomain.CurrentDomain.GetAssemblies();
+            foreach (var assembly in assemblies)
+            {
+                if (assembly.FullName.StartsWith(assemblyName))
+                    return true;
+            }
+            return false;
         }
     }
 }

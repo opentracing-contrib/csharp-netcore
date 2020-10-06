@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Reflection;
 using Jaeger;
-using Jaeger.Metrics;
 using Jaeger.Samplers;
 using Microsoft.Extensions.Logging;
 using OpenTracing;

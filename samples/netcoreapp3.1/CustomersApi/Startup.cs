@@ -24,11 +24,6 @@ namespace Samples.CustomersApi
                     };
                     var connection = new SqliteConnection(connectionStringBuilder.ConnectionString);
 
-                    // Hack: EFCore resets the DB for every connection so we keep the connection open.
-                    // This is obviously just demo code :)
-                    connection.Open();
-                    connection.EnableExtensions(true);
-
                     options.UseSqlite(connection);
                 });
 
@@ -42,7 +37,15 @@ namespace Samples.CustomersApi
 
             app.UseDeveloperExceptionPage();
 
-            app.UseMvc();
+            app.UseRouting();
+
+            app.UseAuthentication();
+            app.UseAuthorization();
+
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapControllers();
+            });
         }
 
         public void BootstrapDataStore(IServiceProvider serviceProvider)

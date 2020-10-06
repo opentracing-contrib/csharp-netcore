@@ -1,14 +1,6 @@
 <Project>
   <Import Project="version.props" />
   <PropertyGroup>
-    <Authors>Christian Weiss</Authors>
-    <PackageIconUrl>https://avatars0.githubusercontent.com/u/15482765</PackageIconUrl>
-    <PackageProjectUrl>https://github.com/opentracing-contrib/csharp-netcore</PackageProjectUrl>
-    <PackageLicenseUrl>https://raw.githubusercontent.com/opentracing-contrib/csharp-netcore/master/LICENSE</PackageLicenseUrl>
-    <PackageReleaseNotes Condition="'$(Version)' != ''">https://github.com/opentracing-contrib/csharp-netcore/releases/tag/$(Version)</PackageReleaseNotes>
-    <RepositoryType>git</RepositoryType>
-    <RepositoryUrl>git://github.com/opentracing-contrib/csharp-netcore</RepositoryUrl>
-
     <!-- Projects that should generate nupkg files override this -->
     <IsPackable>false</IsPackable>
 
