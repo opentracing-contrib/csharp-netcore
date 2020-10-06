@@ -1,3 +1,5 @@
+[![nuget](https://img.shields.io/nuget/v/OpenTracing.Contrib.NetCore.svg?logo=nuget)](https://www.nuget.org/packages/OpenTracing.Contrib.NetCore)
+
 # OpenTracing instrumentation for .NET Core apps
 
 This repository provides OpenTracing instrumentation for .NET Core based applications.
