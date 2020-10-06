@@ -14,6 +14,7 @@ matrix:
               key_url: "https://packages.microsoft.com/keys/microsoft.asc"
           packages:
             - powershell
+            - dotnet-sdk-2.1
 
 env:
   global:
