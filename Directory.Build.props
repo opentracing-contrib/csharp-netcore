@@ -2,9 +2,10 @@
   <Import Project="version.props" />
   <PropertyGroup>
     <Authors>Christian Weiss</Authors>
+    <PackageIcon>package-icon.png</PackageIcon>
     <PackageIconUrl>https://avatars0.githubusercontent.com/u/15482765</PackageIconUrl>
     <PackageProjectUrl>https://github.com/opentracing-contrib/csharp-netcore</PackageProjectUrl>
-    <PackageLicenseUrl>https://raw.githubusercontent.com/opentracing-contrib/csharp-netcore/master/LICENSE</PackageLicenseUrl>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <PackageReleaseNotes Condition="'$(Version)' != ''">https://github.com/opentracing-contrib/csharp-netcore/releases/tag/$(Version)</PackageReleaseNotes>
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>git://github.com/opentracing-contrib/csharp-netcore</RepositoryUrl>
@@ -18,5 +19,9 @@
     <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)SignKey.snk</AssemblyOriginatorKeyFile>
     <PublicSign Condition=" '$(OS)' != 'Windows_NT' ">true</PublicSign>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="$(SolutionDir)/package-icon.png" Pack="true" PackagePath="" />
+  </ItemGroup>
 
 </Project>
