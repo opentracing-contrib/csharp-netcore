@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Linq;
 
@@ -11,6 +12,13 @@ namespace OpenTracing.Contrib.NetCore.CoreFx
 
         private string _componentName = DefaultComponent;
         private Func<SqlCommand, string> _operationNameResolver;
+
+        /// <summary>
+        /// A list of delegates that define whether or not a given SQL command should be ignored.
+        /// <para/>
+        /// If any delegate in the list returns <c>true</c>, the SQL command will be ignored.
+        /// </summary>
+        public List<Func<SqlCommand, bool>> IgnorePatterns { get; } = new List<Func<SqlCommand, bool>>();
 
         /// <summary>
         /// Allows changing the "component" tag of created spans.

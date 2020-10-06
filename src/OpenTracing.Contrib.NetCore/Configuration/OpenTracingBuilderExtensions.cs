@@ -26,15 +26,15 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <summary>
         /// Adds instrumentation for ASP.NET Core.
         /// </summary>
-        public static IOpenTracingBuilder AddAspNetCore(this IOpenTracingBuilder builder)
+        public static IOpenTracingBuilder AddAspNetCore(this IOpenTracingBuilder builder, Action<AspNetCoreDiagnosticOptions> options = null)
         {
             if (builder == null)
                 throw new ArgumentNullException(nameof(builder));
 
             builder.AddDiagnosticSubscriber<AspNetCoreDiagnostics>();
-            builder.ConfigureGenericDiagnostics(options => options.IgnoredListenerNames.Add(AspNetCoreDiagnostics.DiagnosticListenerName));
+            builder.ConfigureGenericDiagnostics(genericOptions => genericOptions.IgnoredListenerNames.Add(AspNetCoreDiagnostics.DiagnosticListenerName));
 
-            return builder;
+            return ConfigureAspNetCore(builder, options);
         }
 
         public static IOpenTracingBuilder ConfigureAspNetCore(this IOpenTracingBuilder builder, Action<AspNetCoreDiagnosticOptions> options)
@@ -95,18 +95,31 @@ namespace Microsoft.Extensions.DependencyInjection
             return builder;
         }
 
+        public static IOpenTracingBuilder ConfigureSqlClientDiagnostics(this IOpenTracingBuilder builder, Action<SqlClientDiagnosticOptions> options)
+        {
+            if (builder == null)
+                throw new ArgumentNullException(nameof(builder));
+
+            if (options != null)
+            {
+                builder.Services.Configure(options);
+            }
+
+            return builder;
+        }
+
         /// <summary>
         /// Adds instrumentation for Entity Framework Core.
         /// </summary>
-        public static IOpenTracingBuilder AddEntityFrameworkCore(this IOpenTracingBuilder builder)
+        public static IOpenTracingBuilder AddEntityFrameworkCore(this IOpenTracingBuilder builder, Action<EntityFrameworkCoreDiagnosticOptions> options = null)
         {
             if (builder == null)
                 throw new ArgumentNullException(nameof(builder));
 
             builder.AddDiagnosticSubscriber<EntityFrameworkCoreDiagnostics>();
-            builder.ConfigureGenericDiagnostics(options => options.IgnoredListenerNames.Add(EntityFrameworkCoreDiagnostics.DiagnosticListenerName));
+            builder.ConfigureGenericDiagnostics(genericOptions => genericOptions.IgnoredListenerNames.Add(EntityFrameworkCoreDiagnostics.DiagnosticListenerName));
 
-            return builder;
+            return ConfigureEntityFrameworkCore(builder, options);
         }
 
         /// <summary>

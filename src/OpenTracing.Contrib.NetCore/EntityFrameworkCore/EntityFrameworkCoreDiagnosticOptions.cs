@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 
 namespace OpenTracing.Contrib.NetCore.EntityFrameworkCore
@@ -9,6 +10,13 @@ namespace OpenTracing.Contrib.NetCore.EntityFrameworkCore
 
         private string _componentName = DefaultComponent;
         private Func<CommandEventData, string> _operationNameResolver;
+
+        /// <summary>
+        /// A list of delegates that define whether or not a given EF Core command should be ignored.
+        /// <para/>
+        /// If any delegate in the list returns <c>true</c>, the EF Core command will be ignored.
+        /// </summary>
+        public List<Func<CommandEventData, bool>> IgnorePatterns { get; } = new List<Func<CommandEventData, bool>>();
 
         /// <summary>
         /// Allows changing the "component" tag of created spans.

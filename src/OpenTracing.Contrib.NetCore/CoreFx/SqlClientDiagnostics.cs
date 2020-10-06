@@ -33,6 +33,12 @@ namespace OpenTracing.Contrib.NetCore.CoreFx
                     {
                         var args = (SqlCommand)_activityCommand_RequestFetcher.Fetch(untypedArg);
 
+                        if (IgnoreEvent(args))
+                        {
+                            Logger.LogDebug("Ignoring SQL command due to IgnorePatterns");
+                            return;
+                        }
+
                         string operationName = _options.OperationNameResolver(args);
 
                         Tracer.BuildSpan(operationName)
@@ -48,16 +54,27 @@ namespace OpenTracing.Contrib.NetCore.CoreFx
                     {
                         Exception ex = (Exception)_exception_ExceptionFetcher.Fetch(untypedArg);
 
-                        DisposeActiveScope(isScopeRequired: true, exception: ex);
+                        DisposeActiveScope(isScopeRequired: false, exception: ex);
                     }
                     break;
 
                 case "System.Data.SqlClient.WriteCommandAfter":
                     {
-                        DisposeActiveScope(isScopeRequired: true);
+                        DisposeActiveScope(isScopeRequired: false);
                     }
                     break;
             }
+        }
+
+        private bool IgnoreEvent(SqlCommand sqlCommand)
+        {
+            foreach (Func<SqlCommand, bool> ignore in _options.IgnorePatterns)
+            {
+                if (ignore(sqlCommand))
+                    return true;
+            }
+
+            return false;
         }
     }
 }
