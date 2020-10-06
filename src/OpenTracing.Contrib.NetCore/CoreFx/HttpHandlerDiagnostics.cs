@@ -3,7 +3,6 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using OpenTracing.Contrib.NetCore.Configuration;
 using OpenTracing.Contrib.NetCore.Internal;
 using OpenTracing.Propagation;
 using OpenTracing.Tag;
@@ -71,8 +70,7 @@ namespace OpenTracing.Contrib.NetCore.CoreFx
                             Tracer.Inject(span.Context, BuiltinFormats.HttpHeaders, new HttpHeadersInjectAdapter(request.Headers));
                         }
 
-                        // This throws if there's already an item with the same key. We do this for now to get notified of potential bugs.
-                        request.Properties.Add(PropertiesKey, span);
+                        request.Properties[PropertiesKey] = span;
                     }
                     break;
 
@@ -97,6 +95,8 @@ namespace OpenTracing.Contrib.NetCore.CoreFx
 
                         if (request.Properties.TryGetValue(PropertiesKey, out object objSpan) && objSpan is ISpan span)
                         {
+                            request.Properties.Remove(PropertiesKey);
+
                             var response = (HttpResponseMessage)_activityStop_ResponseFetcher.Fetch(arg);
                             var requestTaskStatus = (TaskStatus)_activityStop_RequestTaskStatusFetcher.Fetch(arg);
 
@@ -111,8 +111,6 @@ namespace OpenTracing.Contrib.NetCore.CoreFx
                             }
 
                             span.Finish();
-
-                            request.Properties.Remove(PropertiesKey);
                         }
                     }
                     break;
