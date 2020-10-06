@@ -2,19 +2,29 @@
   <Import Project="..\Directory.Build.props" />
 
   <PropertyGroup>
+    <IsPackable>true</IsPackable>
+    <Authors>Christian Weiss</Authors>
+    <PackageIcon>package-icon.png</PackageIcon>
+    <PackageIconUrl>https://avatars0.githubusercontent.com/u/15482765</PackageIconUrl>
+    <PackageProjectUrl>https://github.com/opentracing-contrib/csharp-netcore</PackageProjectUrl>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <PackageReleaseNotes Condition="'$(Version)' != ''">https://github.com/opentracing-contrib/csharp-netcore/releases/tag/$(Version)</PackageReleaseNotes>
+
     <NoWarn>$(NoWarn);CS1591</NoWarn>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <IsPackable>true</IsPackable>
 
     <!-- SourceLink support -->
-    <DebugType>portable</DebugType>
-    <SourceLinkNoAutoLF>true</SourceLinkNoAutoLF>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="SourceLink.Create.GitHub" Version="2.8.3" PrivateAssets="All" />
-    <DotNetCliToolReference Include="dotnet-sourcelink" Version="2.8.3" />
-    <DotNetCliToolReference Include="dotnet-sourcelink-git" Version="2.8.3" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="$(SolutionDir)/package-icon.png" Pack="true" PackagePath="" />
   </ItemGroup>
 
 </Project>
