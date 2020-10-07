@@ -14,6 +14,8 @@ Start-Process `
     -ArgumentList @( "dotnet run -f $Framework --no-build; Read-Host 'Press enter to exit'" ) `
     -WorkingDirectory "samples\$Framework\CustomersApi"
 
+Start-Sleep -Seconds 2
+
 Start-Process `
     -FilePath powershell.exe `
     -ArgumentList @( "dotnet run -f $Framework --no-build; Read-Host 'Press enter to exit'" ) `

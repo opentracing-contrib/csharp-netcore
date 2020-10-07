@@ -26,6 +26,9 @@ namespace TrafficGenerator
 
                 while (!stoppingToken.IsCancellationRequested)
                 {
+                    HttpResponseMessage healthResponse = await httpClient.GetAsync("health");
+                    _logger.LogInformation($"Health of 'customers'-endpoint: '{healthResponse.StatusCode}'");
+
                     _logger.LogInformation("Requesting customers");
 
                     HttpResponseMessage response = await httpClient.GetAsync("customers");
