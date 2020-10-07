@@ -25,6 +25,12 @@ namespace Samples.CustomersApi
                     // Enables OpenTracing instrumentation for ASP.NET Core, CoreFx, EF Core
                     services.AddOpenTracing(builder =>
                     {
+                        builder.ConfigureAspNetCore(options =>
+                        {
+                            // We don't need any tracing data for our health endpoint.
+                            options.Hosting.IgnorePatterns.Add(ctx => ctx.Request.Path == "/health");
+                        });
+
                         builder.ConfigureEntityFrameworkCore(options =>
                         {
                             // This is an example for how certain EF Core commands can be ignored.
