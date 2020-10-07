@@ -23,6 +23,11 @@ namespace OpenTracing.Contrib.NetCore.CoreFx
         }
 
         /// <summary>
+        /// Whether or not spans should be created if there is no currently active span.
+        /// </summary>
+        public bool StartRootSpans { get; set; } = true;
+
+        /// <summary>
         /// A list of delegates that define whether or not a given request should be ignored.
         /// <para/>
         /// If any delegate in the list returns <c>true</c>, the request will be ignored.

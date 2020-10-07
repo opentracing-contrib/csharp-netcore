@@ -32,7 +32,15 @@ namespace Microsoft.Extensions.DependencyInjection
                 throw new ArgumentNullException(nameof(builder));
 
             builder.AddDiagnosticSubscriber<AspNetCoreDiagnostics>();
-            builder.ConfigureGenericDiagnostics(genericOptions => genericOptions.IgnoredListenerNames.Add(AspNetCoreDiagnostics.DiagnosticListenerName));
+
+            // When enabling ASP.NET Core instrumentation, we change some of the defaults of CoreFx instrumentation.
+
+            builder.ConfigureGenericDiagnostics(options => options.IgnoredListenerNames.Add(AspNetCoreDiagnostics.DiagnosticListenerName));
+
+            // This ensures that no spans are recorded for a request if e.g. a IgnorePattern on Hosting ignores the request.
+            builder.ConfigureEntityFrameworkCore(options => options.StartRootSpans = false);
+            builder.ConfigureHttpHandlerDiagnostics(options => options.StartRootSpans = false);
+            builder.ConfigureSqlClientDiagnostics(options => options.StartRootSpans = false);
 
             return builder;
         }
@@ -92,6 +100,19 @@ namespace Microsoft.Extensions.DependencyInjection
         }
 
         public static IOpenTracingBuilder ConfigureGenericEvents(this IOpenTracingBuilder builder, Action<GenericEventOptions> options)
+        {
+            if (builder == null)
+                throw new ArgumentNullException(nameof(builder));
+
+            if (options != null)
+            {
+                builder.Services.Configure(options);
+            }
+
+            return builder;
+        }
+
+        public static IOpenTracingBuilder ConfigureHttpHandlerDiagnostics(this IOpenTracingBuilder builder, Action<HttpHandlerDiagnosticOptions> options)
         {
             if (builder == null)
                 throw new ArgumentNullException(nameof(builder));

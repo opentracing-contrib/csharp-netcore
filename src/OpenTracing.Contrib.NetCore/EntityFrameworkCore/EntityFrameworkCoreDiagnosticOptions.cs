@@ -31,6 +31,11 @@ namespace OpenTracing.Contrib.NetCore.EntityFrameworkCore
         }
 
         /// <summary>
+        /// Whether or not spans should be created if there is no currently active span.
+        /// </summary>
+        public bool StartRootSpans { get; set; } = true;
+
+        /// <summary>
         /// A delegate that returns the OpenTracing "operation name" for the given command.
         /// </summary>
         public Func<CommandEventData, string> OperationNameResolver

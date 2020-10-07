@@ -31,6 +31,13 @@ namespace OpenTracing.Contrib.NetCore.CoreFx
             {
                 case "System.Data.SqlClient.WriteCommandBefore":
                     {
+                        var activeSpan = Tracer.ActiveSpan;
+                        if (activeSpan == null && !_options.StartRootSpans)
+                        {
+                            Logger.LogDebug("Ignoring event (StartRootSpans=false)");
+                            return;
+                        }
+
                         var args = (SqlCommand)_activityCommand_RequestFetcher.Fetch(untypedArg);
 
                         if (IgnoreEvent(args))
@@ -42,6 +49,7 @@ namespace OpenTracing.Contrib.NetCore.CoreFx
                         string operationName = _options.OperationNameResolver(args);
 
                         Tracer.BuildSpan(operationName)
+                            .AsChildOf(activeSpan)
                             .WithTag(Tags.SpanKind, Tags.SpanKindClient)
                             .WithTag(Tags.Component, _options.ComponentName)
                             .WithTag(Tags.DbInstance, args.Connection.Database)

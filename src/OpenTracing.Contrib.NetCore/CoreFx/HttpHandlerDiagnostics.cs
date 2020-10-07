@@ -3,7 +3,6 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using OpenTracing.Contrib.NetCore.Configuration;
 using OpenTracing.Contrib.NetCore.Internal;
 using OpenTracing.Propagation;
 using OpenTracing.Tag;
@@ -45,6 +44,13 @@ namespace OpenTracing.Contrib.NetCore.CoreFx
             {
                 case "System.Net.Http.HttpRequestOut.Start":
                     {
+                        var activeSpan = Tracer.ActiveSpan;
+                        if (activeSpan == null && !_options.StartRootSpans)
+                        {
+                            Logger.LogDebug("Ignoring event (StartRootSpans=false)");
+                            return;
+                        }
+
                         var request = (HttpRequestMessage)_activityStart_RequestFetcher.Fetch(arg);
 
                         if (IgnoreRequest(request))
@@ -56,6 +62,7 @@ namespace OpenTracing.Contrib.NetCore.CoreFx
                         string operationName = _options.OperationNameResolver(request);
 
                         ISpan span = Tracer.BuildSpan(operationName)
+                            .AsChildOf(activeSpan)
                             .WithTag(Tags.SpanKind, Tags.SpanKindClient)
                             .WithTag(Tags.Component, _options.ComponentName)
                             .WithTag(Tags.HttpMethod, request.Method.ToString())

@@ -32,6 +32,13 @@ namespace OpenTracing.Contrib.NetCore.EntityFrameworkCore
             {
                 case "Microsoft.EntityFrameworkCore.Database.Command.CommandExecuting":
                     {
+                        var activeSpan = Tracer.ActiveSpan;
+                        if (activeSpan == null && !_options.StartRootSpans)
+                        {
+                            Logger.LogDebug("Ignoring event (StartRootSpans=false)");
+                            return;
+                        }
+
                         CommandEventData args = (CommandEventData)untypedArg;
 
                         if (IgnoreEvent(args))
@@ -43,6 +50,7 @@ namespace OpenTracing.Contrib.NetCore.EntityFrameworkCore
                         string operationName = _options.OperationNameResolver(args);
 
                         Tracer.BuildSpan(operationName)
+                            .AsChildOf(activeSpan)
                             .WithTag(Tags.SpanKind, Tags.SpanKindClient)
                             .WithTag(Tags.Component, _options.ComponentName)
                             .WithTag(Tags.DbInstance, args.Command.Connection.Database)
