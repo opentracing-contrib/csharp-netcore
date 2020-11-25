@@ -28,7 +28,8 @@ namespace OpenTracing.Contrib.NetCore.CoreFx
         protected override void OnNext(string eventName, object untypedArg)
         {
             switch (eventName)
-            {
+            { 
+                case "Microsoft.Data.SqlClient.WriteCommandBefore":
                 case "System.Data.SqlClient.WriteCommandBefore":
                     {
                         var args = (SqlCommand)_activityCommand_RequestFetcher.Fetch(untypedArg);
@@ -51,6 +52,7 @@ namespace OpenTracing.Contrib.NetCore.CoreFx
                     break;
 
                 case "System.Data.SqlClient.WriteCommandError":
+                case "Microsoft.Data.SqlClient.WriteCommandError":
                     {
                         Exception ex = (Exception)_exception_ExceptionFetcher.Fetch(untypedArg);
 
@@ -59,6 +61,7 @@ namespace OpenTracing.Contrib.NetCore.CoreFx
                     break;
 
                 case "System.Data.SqlClient.WriteCommandAfter":
+                case "Microsoft.Data.SqlClient.WriteCommandAfter":
                     {
                         DisposeActiveScope(isScopeRequired: false);
                     }
