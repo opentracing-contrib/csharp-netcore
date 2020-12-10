@@ -61,7 +61,15 @@ namespace OpenTracing.Contrib.NetCore.CoreFx
 
             IgnorePatterns.Add((request) =>
             {
-                return request.Properties.ContainsKey(PropertyIgnore);
+                IDictionary<string, object> requestOptions;
+
+#if NETCOREAPP2_1 || NETCOREAPP3_1
+                requestOptions = request.Properties;
+#else 
+                requestOptions = request.Options;
+#endif
+
+                return requestOptions.ContainsKey(PropertyIgnore);
             });
 
             OperationNameResolver = (request) =>
