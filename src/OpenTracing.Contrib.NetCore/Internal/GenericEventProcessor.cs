@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using Microsoft.Extensions.Logging;
-using OpenTracing.Contrib.NetCore.Configuration;
 using OpenTracing.Tag;
 
 namespace OpenTracing.Contrib.NetCore.Internal

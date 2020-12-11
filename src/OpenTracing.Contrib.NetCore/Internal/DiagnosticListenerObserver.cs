@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using Microsoft.Extensions.Logging;
-using OpenTracing.Contrib.NetCore.Configuration;
 
 namespace OpenTracing.Contrib.NetCore.Internal
 {
@@ -47,7 +46,10 @@ namespace OpenTracing.Contrib.NetCore.Internal
         {
             try
             {
-                OnNext(value.Key, value.Value);
+                if (IsEnabled(value.Key))
+                {
+                    OnNext(value.Key, value.Value);
+                }
             }
             catch (Exception ex)
             {
