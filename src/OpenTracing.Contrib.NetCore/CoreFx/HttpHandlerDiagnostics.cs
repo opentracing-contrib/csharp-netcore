@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -78,16 +79,17 @@ namespace OpenTracing.Contrib.NetCore.CoreFx
                             Tracer.Inject(span.Context, BuiltinFormats.HttpHeaders, new HttpHeadersInjectAdapter(request.Headers));
                         }
 
-                        // This throws if there's already an item with the same key. We do this for now to get notified of potential bugs.
-                        request.Properties.Add(PropertiesKey, span);
+                        var requestOptions = GetRequestOptions(request);
+                        requestOptions[PropertiesKey] = span;
                     }
                     break;
 
                 case "System.Net.Http.Exception":
                     {
                         var request = (HttpRequestMessage)_exception_RequestFetcher.Fetch(arg);
+                        var requestOptions = GetRequestOptions(request);
 
-                        if (request.Properties.TryGetValue(PropertiesKey, out object objSpan) && objSpan is ISpan span)
+                        if (requestOptions.TryGetValue(PropertiesKey, out object objSpan) && objSpan is ISpan span)
                         {
                             var exception = (Exception)_exception_ExceptionFetcher.Fetch(arg);
 
@@ -101,9 +103,12 @@ namespace OpenTracing.Contrib.NetCore.CoreFx
                 case "System.Net.Http.HttpRequestOut.Stop":
                     {
                         var request = (HttpRequestMessage)_activityStop_RequestFetcher.Fetch(arg);
+                        var requestOptions = GetRequestOptions(request);
 
-                        if (request.Properties.TryGetValue(PropertiesKey, out object objSpan) && objSpan is ISpan span)
+                        if (requestOptions.TryGetValue(PropertiesKey, out object objSpan) && objSpan is ISpan span)
                         {
+                            requestOptions.Remove(PropertiesKey);
+
                             var response = (HttpResponseMessage)_activityStop_ResponseFetcher.Fetch(arg);
                             var requestTaskStatus = (TaskStatus)_activityStop_RequestTaskStatusFetcher.Fetch(arg);
 
@@ -118,8 +123,6 @@ namespace OpenTracing.Contrib.NetCore.CoreFx
                             }
 
                             span.Finish();
-
-                            request.Properties.Remove(PropertiesKey);
                         }
                     }
                     break;
@@ -135,6 +138,19 @@ namespace OpenTracing.Contrib.NetCore.CoreFx
             }
 
             return false;
+        }
+
+        private IDictionary<string, object> GetRequestOptions(HttpRequestMessage request)
+        {
+            IDictionary<string, object> requestOptions;
+
+#if NETCOREAPP2_1 || NETCOREAPP3_1
+            requestOptions = request.Properties;
+#else 
+            requestOptions = request.Options;
+#endif
+
+            return requestOptions;
         }
     }
 }

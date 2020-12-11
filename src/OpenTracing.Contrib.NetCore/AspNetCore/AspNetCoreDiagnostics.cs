@@ -49,9 +49,6 @@ namespace OpenTracing.Contrib.NetCore.AspNetCore
 
         protected override void OnNext(string eventName, object untypedArg)
         {
-            if (!IsEnabled(eventName))
-                return;
-
             bool eventProcessed = _hostingEventProcessor.ProcessEvent(eventName, untypedArg)
                 || _mvcEventProcessor.ProcessEvent(eventName, untypedArg);
 

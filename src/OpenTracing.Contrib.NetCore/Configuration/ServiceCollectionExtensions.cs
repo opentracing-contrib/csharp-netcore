@@ -24,6 +24,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 otBuilder.AddCoreFx();
                 otBuilder.AddLoggerProvider();
                 otBuilder.AddEntityFrameworkCore();
+                otBuilder.AddMicrosoftSqlClient();
 
                 if (AssemblyExists("Microsoft.AspNetCore.Hosting"))
                 {

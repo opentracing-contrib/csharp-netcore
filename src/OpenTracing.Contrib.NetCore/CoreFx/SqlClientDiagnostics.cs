@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Data.SqlClient;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -15,15 +16,22 @@ namespace OpenTracing.Contrib.NetCore.CoreFx
         private static readonly PropertyFetcher _exception_ExceptionFetcher = new PropertyFetcher("Exception");
 
         private readonly SqlClientDiagnosticOptions _options;
+        private readonly ConcurrentDictionary<object, ISpan> _spanStorage;
 
         public SqlClientDiagnostics(ILoggerFactory loggerFactory, ITracer tracer, IOptions<SqlClientDiagnosticOptions> options,
             IOptions<GenericEventOptions> genericEventOptions)
            : base(loggerFactory, tracer, genericEventOptions.Value)
         {
             _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
+            _spanStorage = new ConcurrentDictionary<object, ISpan>();
         }
 
         protected override string GetListenerName() => DiagnosticListenerName;
+
+        protected override bool IsEnabled(string eventName)
+        {
+            return eventName.StartsWith("System.Data.SqlClient");
+        }
 
         protected override void OnNext(string eventName, object untypedArg)
         {
@@ -31,44 +39,55 @@ namespace OpenTracing.Contrib.NetCore.CoreFx
             {
                 case "System.Data.SqlClient.WriteCommandBefore":
                     {
+                        var cmd = (SqlCommand)_activityCommand_RequestFetcher.Fetch(untypedArg);
+
                         var activeSpan = Tracer.ActiveSpan;
                         if (activeSpan == null && !_options.StartRootSpans)
                         {
                             Logger.LogDebug("Ignoring event (StartRootSpans=false)");
                             return;
                         }
-
-                        var args = (SqlCommand)_activityCommand_RequestFetcher.Fetch(untypedArg);
-
-                        if (IgnoreEvent(args))
+                        if (IgnoreEvent(cmd))
                         {
                             Logger.LogDebug("Ignoring SQL command due to IgnorePatterns");
                             return;
                         }
 
-                        string operationName = _options.OperationNameResolver(args);
+                        string operationName = _options.OperationNameResolver(cmd);
 
-                        Tracer.BuildSpan(operationName)
+                        var span = Tracer.BuildSpan(operationName)
                             .AsChildOf(activeSpan)
                             .WithTag(Tags.SpanKind, Tags.SpanKindClient)
                             .WithTag(Tags.Component, _options.ComponentName)
-                            .WithTag(Tags.DbInstance, args.Connection.Database)
-                            .WithTag(Tags.DbStatement, args.CommandText)
-                            .StartActive();
+                            .WithTag(Tags.DbInstance, cmd.Connection.Database)
+                            .WithTag(Tags.DbStatement, cmd.CommandText)
+                            .Start();
+
+                        _spanStorage.TryAdd(cmd, span);
                     }
                     break;
 
                 case "System.Data.SqlClient.WriteCommandError":
                     {
-                        Exception ex = (Exception)_exception_ExceptionFetcher.Fetch(untypedArg);
+                        var cmd = (SqlCommand)_activityCommand_RequestFetcher.Fetch(untypedArg);
+                        var ex = (Exception)_exception_ExceptionFetcher.Fetch(untypedArg);
 
-                        DisposeActiveScope(isScopeRequired: false, exception: ex);
+                        if (_spanStorage.TryRemove(cmd, out var span))
+                        {
+                            span.SetException(ex);
+                            span.Finish();
+                        }
                     }
                     break;
 
                 case "System.Data.SqlClient.WriteCommandAfter":
                     {
-                        DisposeActiveScope(isScopeRequired: false);
+                        var cmd = (SqlCommand)_activityCommand_RequestFetcher.Fetch(untypedArg);
+
+                        if (_spanStorage.TryRemove(cmd, out var span))
+                        {
+                            span.Finish();
+                        }
                     }
                     break;
             }

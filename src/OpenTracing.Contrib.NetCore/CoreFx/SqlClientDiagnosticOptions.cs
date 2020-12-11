@@ -11,6 +11,7 @@ namespace OpenTracing.Contrib.NetCore.CoreFx
         public const string SqlClientPrefix = "sqlClient ";
 
         private string _componentName = DefaultComponent;
+        private List<Func<SqlCommand, bool>> _ignorePatterns;
         private Func<SqlCommand, string> _operationNameResolver;
 
         /// <summary>
@@ -18,7 +19,7 @@ namespace OpenTracing.Contrib.NetCore.CoreFx
         /// <para/>
         /// If any delegate in the list returns <c>true</c>, the SQL command will be ignored.
         /// </summary>
-        public List<Func<SqlCommand, bool>> IgnorePatterns { get; } = new List<Func<SqlCommand, bool>>();
+        public List<Func<SqlCommand, bool>> IgnorePatterns => _ignorePatterns ??= new List<Func<SqlCommand, bool>>();
 
         /// <summary>
         /// Allows changing the "component" tag of created spans.

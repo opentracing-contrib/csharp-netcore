@@ -7,8 +7,7 @@ namespace OpenTracing.Contrib.NetCore.Internal
     {
         public static bool IsNoopTracer(this ITracer tracer)
         {
-            // TODO Change if https://github.com/opentracing/opentracing-csharp/pull/77 gets released.
-            if (tracer == NoopTracerFactory.Create())
+            if (tracer is NoopTracer)
                 return true;
 
             // There's no way to check the underlying tracer on the instance so we have to check the static method.

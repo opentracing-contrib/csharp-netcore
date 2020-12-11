@@ -12,6 +12,11 @@ environment:
     DOTNET_CLI_TELEMETRY_OPTOUT: 1
 
 build_script:
+  - ps: Invoke-WebRequest https://dot.net/v1/dotnet-install.ps1 -OutFile .\dotnet-install.ps1
+  - ps: .\dotnet-install.ps1 -Runtime dotnet -Version 2.0.7 # Required for building the netcoreapp2.1 FrontendWeb (Razor throws an error otherwise)
+  - ps: .\dotnet-install.ps1 -Runtime dotnet -Version 2.1.23
+  - ps: .\dotnet-install.ps1 -Runtime dotnet -Version 3.1.10
+  - ps: .\dotnet-install.ps1 -Version 5.0.101
   - ps: .\build.ps1
 
 test: off
