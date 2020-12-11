@@ -1,24 +1,24 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Data.SqlClient;
+using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using OpenTracing.Contrib.NetCore.Internal;
 using OpenTracing.Tag;
 
-namespace OpenTracing.Contrib.NetCore.CoreFx
+namespace OpenTracing.Contrib.NetCore.MicrosoftSqlClient
 {
-    internal sealed class SqlClientDiagnostics : DiagnosticListenerObserver
+    internal sealed class MicrosoftSqlClientDiagnostics : DiagnosticListenerObserver
     {
         public const string DiagnosticListenerName = "SqlClientDiagnosticListener";
 
         private static readonly PropertyFetcher _activityCommand_RequestFetcher = new PropertyFetcher("Command");
         private static readonly PropertyFetcher _exception_ExceptionFetcher = new PropertyFetcher("Exception");
 
-        private readonly SqlClientDiagnosticOptions _options;
+        private readonly MicrosoftSqlClientDiagnosticOptions _options;
         private readonly ConcurrentDictionary<object, ISpan> _spanStorage;
 
-        public SqlClientDiagnostics(ILoggerFactory loggerFactory, ITracer tracer, IOptions<SqlClientDiagnosticOptions> options,
+        public MicrosoftSqlClientDiagnostics(ILoggerFactory loggerFactory, ITracer tracer, IOptions<MicrosoftSqlClientDiagnosticOptions> options,
             IOptions<GenericEventOptions> genericEventOptions)
            : base(loggerFactory, tracer, genericEventOptions.Value)
         {
@@ -30,14 +30,14 @@ namespace OpenTracing.Contrib.NetCore.CoreFx
 
         protected override bool IsEnabled(string eventName)
         {
-            return eventName.StartsWith("System.Data.SqlClient");
+            return eventName.StartsWith("Microsoft.Data.SqlClient");
         }
 
         protected override void OnNext(string eventName, object untypedArg)
         {
             switch (eventName)
             {
-                case "System.Data.SqlClient.WriteCommandBefore":
+                case "Microsoft.Data.SqlClient.WriteCommandBefore":
                     {
                         var cmd = (SqlCommand)_activityCommand_RequestFetcher.Fetch(untypedArg);
 
@@ -60,7 +60,7 @@ namespace OpenTracing.Contrib.NetCore.CoreFx
                     }
                     break;
 
-                case "System.Data.SqlClient.WriteCommandError":
+                case "Microsoft.Data.SqlClient.WriteCommandError":
                     {
                         var cmd = (SqlCommand)_activityCommand_RequestFetcher.Fetch(untypedArg);
                         var ex = (Exception)_exception_ExceptionFetcher.Fetch(untypedArg);
@@ -73,7 +73,7 @@ namespace OpenTracing.Contrib.NetCore.CoreFx
                     }
                     break;
 
-                case "System.Data.SqlClient.WriteCommandAfter":
+                case "Microsoft.Data.SqlClient.WriteCommandAfter":
                     {
                         var cmd = (SqlCommand)_activityCommand_RequestFetcher.Fetch(untypedArg);
 

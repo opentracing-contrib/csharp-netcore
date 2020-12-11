@@ -12,7 +12,6 @@ namespace Samples.CustomersApi
         {
             // Adds a Sqlite DB to show EFCore traces.
             services
-                .AddEntityFrameworkSqlite()
                 .AddDbContext<CustomerDbContext>(options =>
                 {
                     options.UseSqlite("Data Source=DataStore/customers.db");
@@ -23,7 +22,7 @@ namespace Samples.CustomersApi
 
         public void Configure(IApplicationBuilder app)
         {
-            // Load some dummy data into the InMemory db.
+            // Load some dummy data into the db.
             BootstrapDataStore(app.ApplicationServices);
 
             app.UseDeveloperExceptionPage();
@@ -39,7 +38,7 @@ namespace Samples.CustomersApi
             });
         }
 
-        public void BootstrapDataStore(IServiceProvider serviceProvider)
+        private void BootstrapDataStore(IServiceProvider serviceProvider)
         {
             using (var scope = serviceProvider.CreateScope())
             {

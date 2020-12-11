@@ -15,7 +15,7 @@ namespace OpenTracing.Contrib.NetCore.AspNetCore
         private static readonly PropertyFetcher _unhandledException_HttpContextFetcher = new PropertyFetcher("httpContext");
         private static readonly PropertyFetcher _unhandledException_ExceptionFetcher = new PropertyFetcher("exception");
 
-        internal static readonly string NoHostSpecified = String.Empty;
+        internal static readonly string NoHostSpecified = string.Empty;
 
         private readonly ITracer _tracer;
         private readonly ILogger _logger;

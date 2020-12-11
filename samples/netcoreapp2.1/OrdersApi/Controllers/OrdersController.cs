@@ -6,17 +6,20 @@ using Shared;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using OpenTracing;
+using OrdersApi.DataStore;
 
 namespace Samples.OrdersApi.Controllers
 {
     [Route("orders")]
     public class OrdersController : Controller
     {
+        private readonly OrdersDbContext _dbContext;
         private readonly HttpClient _httpClient;
         private readonly ITracer _tracer;
 
-        public OrdersController(HttpClient httpClient, ITracer tracer)
+        public OrdersController(OrdersDbContext dbContext, HttpClient httpClient, ITracer tracer)
         {
+            _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
             _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
             _tracer = tracer ?? throw new ArgumentNullException(nameof(tracer));
         }
@@ -26,12 +29,24 @@ namespace Samples.OrdersApi.Controllers
         {
             var customer = await GetCustomer(cmd.CustomerId.Value);
 
+            var order = new Order
+            {
+                CustomerId = cmd.CustomerId.Value,
+                ItemNumber = cmd.ItemNumber,
+                Quantity = cmd.Quantity
+            };
+
+            _dbContext.Orders.Add(order);
+
+            await _dbContext.SaveChangesAsync();
+
             _tracer.ActiveSpan?.Log(new Dictionary<string, object> {
                 { "event", "OrderPlaced" },
-                { "customer", cmd.CustomerId },
+                { "orderId", order.OrderId },
+                { "customer", order.CustomerId },
                 { "customer_name", customer.Name },
-                { "item_number", cmd.ItemNumber },
-                { "quantity", cmd.Quantity }
+                { "item_number", order.ItemNumber },
+                { "quantity", order.Quantity }
             });
 
             return Ok();

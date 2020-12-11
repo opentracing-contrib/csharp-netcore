@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.SqlClient;
 using System.Linq;
+using Microsoft.Data.SqlClient;
 
-namespace OpenTracing.Contrib.NetCore.CoreFx
+namespace OpenTracing.Contrib.NetCore.MicrosoftSqlClient
 {
-    public class SqlClientDiagnosticOptions
+    public class MicrosoftSqlClientDiagnosticOptions
     {
         public const string DefaultComponent = "SqlClient";
         public const string SqlClientPrefix = "sqlClient ";

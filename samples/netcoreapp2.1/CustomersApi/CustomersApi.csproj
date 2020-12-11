@@ -18,6 +18,7 @@
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Core" Version="[2.1.16,2.2)" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="[2.1.14,2.2)" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="[2.1.14,2.2)" />
+    <PackageReference Include="System.Data.SqlClient" Version="4.6.1" />
   </ItemGroup>
 
 </Project>
