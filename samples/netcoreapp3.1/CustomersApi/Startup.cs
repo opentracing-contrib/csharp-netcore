@@ -12,13 +12,15 @@ namespace Samples.CustomersApi
         {
             // Adds a Sqlite DB to show EFCore traces.
             services
-                .AddEntityFrameworkSqlite()
                 .AddDbContext<CustomerDbContext>(options =>
                 {
                     options.UseSqlite("Data Source=DataStore/customers.db");
                 });
 
             services.AddMvc();
+
+            services.AddHealthChecks()
+                .AddDbContextCheck<CustomerDbContext>();
         }
 
         public void Configure(IApplicationBuilder app)
@@ -36,6 +38,7 @@ namespace Samples.CustomersApi
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
+                endpoints.MapHealthChecks("/health");
             });
         }
 

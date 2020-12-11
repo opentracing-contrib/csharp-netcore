@@ -18,6 +18,9 @@ namespace Samples.CustomersApi
                 });
 
             services.AddMvc();
+
+            services.AddHealthChecks()
+                .AddDbContextCheck<CustomerDbContext>();
         }
 
         public void Configure(IApplicationBuilder app)
@@ -35,6 +38,7 @@ namespace Samples.CustomersApi
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
+                endpoints.MapHealthChecks("/health");
             });
         }
 
