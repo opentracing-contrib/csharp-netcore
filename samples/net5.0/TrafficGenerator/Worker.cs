@@ -21,17 +21,24 @@ namespace TrafficGenerator
         {
             try
             {
-                HttpClient httpClient = new HttpClient();
-                httpClient.BaseAddress = new Uri(Constants.CustomersUrl);
+                HttpClient customersHttpClient = new HttpClient();
+                customersHttpClient.BaseAddress = new Uri(Constants.CustomersUrl);
+
+                HttpClient ordersHttpClient = new HttpClient();
+                ordersHttpClient.BaseAddress = new Uri(Constants.OrdersUrl);
+
 
                 while (!stoppingToken.IsCancellationRequested)
                 {
-                    HttpResponseMessage healthResponse = await httpClient.GetAsync("health");
-                    _logger.LogInformation($"Health of 'customers'-endpoint: '{healthResponse.StatusCode}'");
+                    HttpResponseMessage ordershealthResponse = await ordersHttpClient.GetAsync("health");
+                    _logger.LogInformation($"Health of 'orders'-endpoint: '{ordershealthResponse.StatusCode}'");
+
+                    HttpResponseMessage customersHealthResponse = await customersHttpClient.GetAsync("health");
+                    _logger.LogInformation($"Health of 'customers'-endpoint: '{customersHealthResponse.StatusCode}'");
 
                     _logger.LogInformation("Requesting customers");
 
-                    HttpResponseMessage response = await httpClient.GetAsync("customers");
+                    HttpResponseMessage response = await customersHttpClient.GetAsync("customers");
 
                     _logger.LogInformation($"Response was '{response.StatusCode}'");
 

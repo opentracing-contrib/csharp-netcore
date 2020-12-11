@@ -21,6 +21,9 @@ namespace Samples.OrdersApi
             services.AddSingleton<HttpClient>();
 
             services.AddMvc();
+
+            services.AddHealthChecks()
+                .AddDbContextCheck<OrdersDbContext>();
         }
 
         public void Configure(IApplicationBuilder app)
@@ -38,6 +41,7 @@ namespace Samples.OrdersApi
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapDefaultControllerRoute();
+                endpoints.MapHealthChecks("/health");
             });
         }
 
