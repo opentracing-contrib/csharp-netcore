@@ -15,7 +15,7 @@ namespace Samples.OrdersApi
             services
                 .AddDbContext<OrdersDbContext>(options =>
                 {
-                    options.UseSqlServer("Server=(localdb)\\mssqllocaldb;Database=Orders-net5;Trusted_Connection=True;MultipleActiveResultSets=true");
+                    options.UseSqlServer("Server=(localdb)\\mssqllocaldb;Database=Orders-netcoreapp31;Trusted_Connection=True;MultipleActiveResultSets=true");
                 });
 
             services.AddSingleton<HttpClient>();
