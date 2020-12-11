@@ -6,7 +6,7 @@ using Jaeger.Samplers;
 using Jaeger.Senders.Thrift;
 using Microsoft.Extensions.Logging;
 using OpenTracing;
-using OpenTracing.Contrib.NetCore.CoreFx;
+using OpenTracing.Contrib.NetCore.Configuration;
 using OpenTracing.Util;
 
 namespace Microsoft.Extensions.DependencyInjection

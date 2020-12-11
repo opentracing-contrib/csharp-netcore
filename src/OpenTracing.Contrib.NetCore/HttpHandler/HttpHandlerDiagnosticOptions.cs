@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Net.Http;
 
-namespace OpenTracing.Contrib.NetCore.CoreFx
+namespace OpenTracing.Contrib.NetCore.Configuration
 {
-    public class HttpHandlerDiagnosticOptions
+    public class HttpHandlerDiagnosticOptions : DiagnosticOptions
     {
         public const string PropertyIgnore = "ot-ignore";
 

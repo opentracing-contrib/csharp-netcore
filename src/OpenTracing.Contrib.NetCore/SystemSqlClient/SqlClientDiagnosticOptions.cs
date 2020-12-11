@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Linq;
 
-namespace OpenTracing.Contrib.NetCore.CoreFx
+namespace OpenTracing.Contrib.NetCore.Configuration
 {
-    public class SqlClientDiagnosticOptions
+    public class SqlClientDiagnosticOptions : DiagnosticOptions
     {
         public const string DefaultComponent = "SqlClient";
         public const string SqlClientPrefix = "sqlClient ";

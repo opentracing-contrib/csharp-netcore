@@ -127,7 +127,7 @@ namespace OpenTracing.Contrib.NetCore.Tests.AspNetCore
             Assert.Equal(Tags.SpanKindServer, span.Tags[Tags.SpanKind.Key]);
             Assert.Equal("HttpIn", span.Tags[Tags.Component.Key]);
             Assert.Equal("GET", span.Tags[Tags.HttpMethod.Key]);
-            Assert.Equal($"http://{HostingEventProcessor.NoHostSpecified}/foo", span.Tags[Tags.HttpUrl.Key]);
+            Assert.Equal($"http://{AspNetCoreDiagnostics.NoHostSpecified}/foo", span.Tags[Tags.HttpUrl.Key]);
             Assert.Equal(200, span.Tags[Tags.HttpStatus.Key]);
         }
     }

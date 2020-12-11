@@ -4,18 +4,19 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using OpenTracing.Contrib.NetCore.Configuration;
 using OpenTracing.Contrib.NetCore.Internal;
 using OpenTracing.Propagation;
 using OpenTracing.Tag;
 
-namespace OpenTracing.Contrib.NetCore.CoreFx
+namespace OpenTracing.Contrib.NetCore.HttpHandler
 {
     /// <summary>
     /// Instruments outgoing HTTP calls that use <see cref="HttpClientHandler"/>.
     /// <para/>See https://github.com/dotnet/corefx/blob/master/src/System.Net.Http/src/System/Net/Http/DiagnosticsHandler.cs
     /// <para/>and https://github.com/dotnet/corefx/blob/master/src/System.Net.Http/src/System/Net/Http/DiagnosticsHandlerLoggingStrings.cs
     /// </summary>
-    internal sealed class HttpHandlerDiagnostics : DiagnosticListenerObserver
+    internal sealed class HttpHandlerDiagnostics : DiagnosticEventObserver
     {
         public const string DiagnosticListenerName = "HttpHandlerDiagnosticListener";
 
@@ -30,32 +31,66 @@ namespace OpenTracing.Contrib.NetCore.CoreFx
 
         private readonly HttpHandlerDiagnosticOptions _options;
 
-        protected override string GetListenerName() => DiagnosticListenerName;
-
         public HttpHandlerDiagnostics(ILoggerFactory loggerFactory, ITracer tracer,
-            IOptions<HttpHandlerDiagnosticOptions> options, IOptions<GenericEventOptions> genericEventOptions)
-            : base(loggerFactory, tracer, genericEventOptions.Value)
+            IOptions<HttpHandlerDiagnosticOptions> options)
+            : base(loggerFactory, tracer, options?.Value)
         {
             _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
         }
 
-        protected override void OnNext(string eventName, object arg)
+        protected override string GetListenerName() => DiagnosticListenerName;
+
+        protected override bool IsSupportedEvent(string eventName)
+        {
+            return eventName switch
+            {
+                // We don't want to get the old deprecated events.
+                // https://github.com/dotnet/runtime/blob/master/src/libraries/System.Net.Http/src/System/Net/Http/DiagnosticsHandlerLoggingStrings.cs
+                "System.Net.Http.Request" => false,
+                "System.Net.Http.Response" => false,
+                _ => true,
+            };
+        }
+
+        protected override IEnumerable<string> HandledEventNames()
+        {
+            yield return "System.Net.Http.HttpRequestOut.Start";
+            yield return "System.Net.Http.Exception";
+            yield return "System.Net.Http.HttpRequestOut.Stop";
+        }
+
+        protected override void HandleEvent(string eventName, object untypedArg)
         {
             switch (eventName)
             {
                 case "System.Net.Http.HttpRequestOut.Start":
                     {
-                        var request = (HttpRequestMessage)_activityStart_RequestFetcher.Fetch(arg);
+                        var request = (HttpRequestMessage)_activityStart_RequestFetcher.Fetch(untypedArg);
+
+                        var activeSpan = Tracer.ActiveSpan;
+
+                        if (activeSpan == null && !_options.StartRootSpans)
+                        {
+                            if (IsLogLevelTraceEnabled)
+                            {
+                                Logger.LogTrace("Ignoring Request due to missing parent span");
+                            }
+                            return;
+                        }
 
                         if (IgnoreRequest(request))
                         {
-                            Logger.LogDebug("Ignoring Request {RequestUri}", request.RequestUri);
+                            if (IsLogLevelTraceEnabled)
+                            {
+                                Logger.LogTrace("Ignoring Request {RequestUri}", request.RequestUri);
+                            }
                             return;
                         }
 
                         string operationName = _options.OperationNameResolver(request);
 
                         ISpan span = Tracer.BuildSpan(operationName)
+                            .AsChildOf(activeSpan)
                             .WithTag(Tags.SpanKind, Tags.SpanKindClient)
                             .WithTag(Tags.Component, _options.ComponentName)
                             .WithTag(Tags.HttpMethod, request.Method.ToString())
@@ -78,12 +113,12 @@ namespace OpenTracing.Contrib.NetCore.CoreFx
 
                 case "System.Net.Http.Exception":
                     {
-                        var request = (HttpRequestMessage)_exception_RequestFetcher.Fetch(arg);
+                        var request = (HttpRequestMessage)_exception_RequestFetcher.Fetch(untypedArg);
                         var requestOptions = GetRequestOptions(request);
 
                         if (requestOptions.TryGetValue(PropertiesKey, out object objSpan) && objSpan is ISpan span)
                         {
-                            var exception = (Exception)_exception_ExceptionFetcher.Fetch(arg);
+                            var exception = (Exception)_exception_ExceptionFetcher.Fetch(untypedArg);
 
                             span.SetException(exception);
 
@@ -94,15 +129,15 @@ namespace OpenTracing.Contrib.NetCore.CoreFx
 
                 case "System.Net.Http.HttpRequestOut.Stop":
                     {
-                        var request = (HttpRequestMessage)_activityStop_RequestFetcher.Fetch(arg);
+                        var request = (HttpRequestMessage)_activityStop_RequestFetcher.Fetch(untypedArg);
                         var requestOptions = GetRequestOptions(request);
 
                         if (requestOptions.TryGetValue(PropertiesKey, out object objSpan) && objSpan is ISpan span)
                         {
                             requestOptions.Remove(PropertiesKey);
 
-                            var response = (HttpResponseMessage)_activityStop_ResponseFetcher.Fetch(arg);
-                            var requestTaskStatus = (TaskStatus)_activityStop_RequestTaskStatusFetcher.Fetch(arg);
+                            var response = (HttpResponseMessage)_activityStop_ResponseFetcher.Fetch(untypedArg);
+                            var requestTaskStatus = (TaskStatus)_activityStop_RequestTaskStatusFetcher.Fetch(untypedArg);
 
                             if (response != null)
                             {
@@ -117,6 +152,10 @@ namespace OpenTracing.Contrib.NetCore.CoreFx
                             span.Finish();
                         }
                     }
+                    break;
+
+                default:
+                    HandleUnknownEvent(eventName, untypedArg);
                     break;
             }
         }

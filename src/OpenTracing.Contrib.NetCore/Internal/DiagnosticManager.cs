@@ -7,6 +7,9 @@ using Microsoft.Extensions.Options;
 
 namespace OpenTracing.Contrib.NetCore.Internal
 {
+    /// <summary>
+    /// Subscribes to <see cref="DiagnosticListener.AllListeners"/> and forwards events to individual <see cref="DiagnosticObserver"/> instances.
+    /// </summary>
     internal sealed class DiagnosticManager : IObserver<DiagnosticListener>, IDisposable
     {
         private readonly ILogger _logger;
@@ -36,7 +39,7 @@ namespace OpenTracing.Contrib.NetCore.Internal
 
             _logger = loggerFactory.CreateLogger<DiagnosticManager>();
 
-            _diagnosticSubscribers = diagnosticSubscribers.Where(x => x.IsSubscriberEnabled());
+            _diagnosticSubscribers = diagnosticSubscribers;
         }
 
         public void Start()

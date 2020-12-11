@@ -2,25 +2,27 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using Microsoft.Extensions.Logging;
+using OpenTracing.Contrib.NetCore.Configuration;
 
 namespace OpenTracing.Contrib.NetCore.Internal
 {
-
-    internal abstract class DiagnosticListenerObserver : DiagnosticObserver, IObserver<KeyValuePair<string, object>>
+    /// <summary>
+    /// Base class that allows handling events from a single <see cref="DiagnosticListener"/>.
+    /// </summary>
+    internal abstract class DiagnosticEventObserver
+        : DiagnosticObserver, IObserver<KeyValuePair<string, object>>
     {
+        private readonly DiagnosticOptions _options;
         private readonly GenericEventProcessor _genericEventProcessor;
 
-        /// <summary>
-        /// The name of the <see cref="DiagnosticListener"/> that should be instrumented.
-        /// </summary>
-        protected abstract string GetListenerName();
-
-        protected DiagnosticListenerObserver(ILoggerFactory loggerFactory, ITracer tracer, GenericEventOptions options)
+        protected DiagnosticEventObserver(ILoggerFactory loggerFactory, ITracer tracer, DiagnosticOptions options)
             : base(loggerFactory, tracer)
         {
-            if (!options.IsIgnored(GetListenerName()))
+            _options = options;
+
+            if (options.LogEvents)
             {
-                _genericEventProcessor = new GenericEventProcessor(GetListenerName(), Tracer, Logger, options);
+                _genericEventProcessor = new GenericEventProcessor(GetListenerName(), Tracer, Logger);
             }
         }
 
@@ -48,7 +50,7 @@ namespace OpenTracing.Contrib.NetCore.Internal
             {
                 if (IsEnabled(value.Key))
                 {
-                    OnNext(value.Key, value.Value);
+                    HandleEvent(value.Key, value.Value);
                 }
             }
             catch (Exception ex)
@@ -57,14 +59,35 @@ namespace OpenTracing.Contrib.NetCore.Internal
             }
         }
 
-        protected virtual bool IsEnabled(string eventName)
+        /// <summary>
+        /// The name of the <see cref="DiagnosticListener"/> that should be instrumented.
+        /// </summary>
+        protected abstract string GetListenerName();
+
+        protected virtual bool IsSupportedEvent(string eventName) => true;
+
+        protected abstract IEnumerable<string> HandledEventNames();
+
+        private bool IsEnabled(string eventName)
         {
+            if (!IsSupportedEvent(eventName))
+                return false;
+
+            foreach (var handledEventName in HandledEventNames())
+            {
+                if (handledEventName == eventName)
+                    return true;
+            }
+
+            if (!_options.LogEvents || _options.IgnoredEvents.Contains(eventName))
+                return false;
+            
             return true;
         }
 
-        protected abstract void OnNext(string eventName, object untypedArg);
+        protected abstract void HandleEvent(string eventName, object untypedArg);
 
-        protected void ProcessUnhandledEvent(string eventName, object untypedArg)
+        protected void HandleUnknownEvent(string eventName, object untypedArg)
         {
             _genericEventProcessor?.ProcessEvent(eventName, untypedArg);
         }

@@ -21,10 +21,12 @@ namespace Microsoft.Extensions.DependencyInjection
 
             return services.AddOpenTracingCoreServices(otBuilder =>
             {
-                otBuilder.AddCoreFx();
                 otBuilder.AddLoggerProvider();
                 otBuilder.AddEntityFrameworkCore();
+                otBuilder.AddGenericDiagnostics();
+                otBuilder.AddHttpHandler();
                 otBuilder.AddMicrosoftSqlClient();
+                otBuilder.AddSystemSqlClient();
 
                 if (AssemblyExists("Microsoft.AspNetCore.Hosting"))
                 {
