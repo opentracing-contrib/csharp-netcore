@@ -5,6 +5,8 @@
 This repository provides OpenTracing instrumentation for .NET Core based applications.
 It can be used with any OpenTracing compatible tracer.
 
+_**IMPORTANT:** OpenTracing and OpenCensus have merget to form **[OpenTelemetry](https://opentelemetry.io)**! The OpenTelemetry .NET library can be found at [https://github.com/open-telemetry/opentelemetry-dotnet](https://github.com/open-telemetry/opentelemetry-dotnet)._
+
 ## Supported .NET versions
 
 This project currently only supports apps targeting `netcoreapp2.1` (.NET Core 2.1), `netcoreapp3.1` (.NET Core 3.1) or net5.0 (.NET 5.0)!
@@ -24,7 +26,9 @@ To further improve the tracing output, the library provides enhanced instrumenta
 
 * ASP.NET Core
 * Entity Framework Core
-* .NET Core BCL types (HttpClient)
+* System.Net.Http (HttpClient)
+* System.Data.SqlClient
+* Microsoft.Data.SqlClient
 
 #### Microsoft.Extensions.Logging based instrumentation
 
