@@ -3,10 +3,37 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Data.SqlClient;
 
-namespace OpenTracing.Contrib.NetCore.MicrosoftSqlClient
+namespace OpenTracing.Contrib.NetCore.Configuration
 {
-    public class MicrosoftSqlClientDiagnosticOptions
+    public class MicrosoftSqlClientDiagnosticOptions : DiagnosticOptions
     {
+        public static class EventNames
+        {
+            // https://github.com/dotnet/SqlClient/blob/master/src/Microsoft.Data.SqlClient/netcore/src/Microsoft/Data/SqlClient/SqlClientDiagnosticListenerExtensions.cs
+
+            private const string SqlClientPrefix = "Microsoft.Data.SqlClient.";
+
+            public const string WriteCommandBefore = SqlClientPrefix + nameof(WriteCommandBefore);
+            public const string WriteCommandAfter = SqlClientPrefix + nameof(WriteCommandAfter);
+            public const string WriteCommandError = SqlClientPrefix + nameof(WriteCommandError);
+
+            public const string WriteConnectionOpenBefore = SqlClientPrefix + nameof(WriteConnectionOpenBefore);
+            public const string WriteConnectionOpenAfter = SqlClientPrefix + nameof(WriteConnectionOpenAfter);
+            public const string WriteConnectionOpenError = SqlClientPrefix + nameof(WriteConnectionOpenError);
+
+            public const string WriteConnectionCloseBefore = SqlClientPrefix + nameof(WriteConnectionCloseBefore);
+            public const string WriteConnectionCloseAfter = SqlClientPrefix + nameof(WriteConnectionCloseAfter);
+            public const string WriteConnectionCloseError = SqlClientPrefix + nameof(WriteConnectionCloseError);
+
+            public const string WriteTransactionCommitBefore = SqlClientPrefix + nameof(WriteTransactionCommitBefore);
+            public const string WriteTransactionCommitAfter = SqlClientPrefix + nameof(WriteTransactionCommitAfter);
+            public const string WriteTransactionCommitError = SqlClientPrefix + nameof(WriteTransactionCommitError);
+
+            public const string WriteTransactionRollbackBefore = SqlClientPrefix + nameof(WriteTransactionRollbackBefore);
+            public const string WriteTransactionRollbackAfter = SqlClientPrefix + nameof(WriteTransactionRollbackAfter);
+            public const string WriteTransactionRollbackError = SqlClientPrefix + nameof(WriteTransactionRollbackError);
+        }
+
         public const string DefaultComponent = "SqlClient";
         public const string SqlClientPrefix = "sqlClient ";
 

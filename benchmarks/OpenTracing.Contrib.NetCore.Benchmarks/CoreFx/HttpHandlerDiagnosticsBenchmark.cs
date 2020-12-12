@@ -28,7 +28,7 @@ namespace OpenTracing.Contrib.NetCore.Benchmarks.CoreFx
                 .AddOpenTracingCoreServices(builder =>
                 {
                     builder.AddBenchmarkTracer(Mode);
-                    builder.AddCoreFx();
+                    builder.AddHttpHandler();
                 })
                 .BuildServiceProvider();
 

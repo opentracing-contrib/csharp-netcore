@@ -12,14 +12,12 @@ namespace OpenTracing.Contrib.NetCore.Internal
         private readonly ITracer _tracer;
         private readonly ILogger _logger;
         private readonly bool _isLogLevelTraceEnabled;
-        private readonly GenericEventOptions _options;
 
-        public GenericEventProcessor(string listenerName, ITracer tracer, ILogger logger, GenericEventOptions options)
+        public GenericEventProcessor(string listenerName, ITracer tracer, ILogger logger)
         {
             _listenerName = listenerName ?? throw new ArgumentNullException(nameof(listenerName));
             _tracer = tracer ?? throw new ArgumentNullException(nameof(tracer));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _options = options;
 
             _isLogLevelTraceEnabled = _logger.IsEnabled(LogLevel.Trace);
         }
@@ -27,11 +25,6 @@ namespace OpenTracing.Contrib.NetCore.Internal
         public void ProcessEvent(string eventName, object untypedArg)
         {
             Activity activity = Activity.Current;
-
-            if (_options != null && _options.IsIgnored(_listenerName, eventName))
-            {
-                return;
-            }
 
             if (activity != null && eventName.EndsWith(".Start", StringComparison.Ordinal))
             {
@@ -75,7 +68,7 @@ namespace OpenTracing.Contrib.NetCore.Internal
 
         private void HandleRegularEvent(string eventName, object untypedArg)
         {
-            ISpan span = _tracer.ActiveSpan;
+            var span = _tracer.ActiveSpan;
 
             if (span != null)
             {

@@ -3,9 +3,10 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using OpenTracing.Contrib.NetCore.Configuration;
 using OpenTracing.Contrib.NetCore.Internal;
 
-namespace OpenTracing.Contrib.NetCore.CoreFx
+namespace OpenTracing.Contrib.NetCore.GenericListeners
 {
     /// <summary>
     /// A <see cref="DiagnosticListener"/> subscriber that logs ALL events to <see cref="ITracer.ActiveSpan"/>.
@@ -13,29 +14,23 @@ namespace OpenTracing.Contrib.NetCore.CoreFx
     internal sealed class GenericDiagnostics : DiagnosticObserver
     {
         private readonly GenericDiagnosticOptions _options;
-        private readonly GenericEventOptions _genericEventOptions;
 
-        public GenericDiagnostics(ILoggerFactory loggerFactory, ITracer tracer, IOptions<GenericDiagnosticOptions> options,
-            IOptions<GenericEventOptions> genericEventOptions)
+        public GenericDiagnostics(ILoggerFactory loggerFactory, ITracer tracer, IOptions<GenericDiagnosticOptions> options)
             : base(loggerFactory, tracer)
         {
             _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
-            _genericEventOptions = genericEventOptions.Value;
         }
 
         public override IDisposable SubscribeIfMatch(DiagnosticListener diagnosticListener)
         {
-            if (_genericEventOptions.IgnoreAll)
+            if (_options.IgnoredListenerNames.Contains(diagnosticListener.Name))
             {
                 return null;
             }
 
-            if (!_options.IgnoredListenerNames.Contains(diagnosticListener.Name))
-            {
-                return new GenericDiagnosticsSubscription(this, diagnosticListener, _genericEventOptions);
-            }
+            _options.IgnoredEvents.TryGetValue(diagnosticListener.Name, out var ignoredListenerEvents);
 
-            return null;
+            return new GenericDiagnosticsSubscription(this, diagnosticListener, ignoredListenerEvents);
         }
 
         private class GenericDiagnosticsSubscription : IObserver<KeyValuePair<string, object>>, IDisposable
@@ -49,18 +44,13 @@ namespace OpenTracing.Contrib.NetCore.CoreFx
 
 
             public GenericDiagnosticsSubscription(GenericDiagnostics subscriber, DiagnosticListener diagnosticListener,
-                 GenericEventOptions genericEventOptions)
+                 HashSet<string> ignoredEvents)
             {
                 _subscriber = subscriber;
+                _ignoredEvents = ignoredEvents;
                 _listenerName = diagnosticListener.Name;
 
-                subscriber._options.IgnoredEvents.TryGetValue(diagnosticListener.Name, out _ignoredEvents);
-
-                if (!genericEventOptions.IsIgnored(diagnosticListener.Name))
-                {
-                    _genericEventProcessor = new GenericEventProcessor(_listenerName, _subscriber.Tracer, subscriber.Logger,
-                        genericEventOptions);
-                }
+                _genericEventProcessor = new GenericEventProcessor(_listenerName, _subscriber.Tracer, subscriber.Logger);
 
                 _subscription = diagnosticListener.Subscribe(this, IsEnabled);
             }

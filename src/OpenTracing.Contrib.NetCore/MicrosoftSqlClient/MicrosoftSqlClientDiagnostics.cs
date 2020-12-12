@@ -1,14 +1,16 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using OpenTracing.Contrib.NetCore.Configuration;
 using OpenTracing.Contrib.NetCore.Internal;
 using OpenTracing.Tag;
 
 namespace OpenTracing.Contrib.NetCore.MicrosoftSqlClient
 {
-    internal sealed class MicrosoftSqlClientDiagnostics : DiagnosticListenerObserver
+    internal sealed class MicrosoftSqlClientDiagnostics : DiagnosticEventObserver
     {
         public const string DiagnosticListenerName = "SqlClientDiagnosticListener";
 
@@ -18,9 +20,8 @@ namespace OpenTracing.Contrib.NetCore.MicrosoftSqlClient
         private readonly MicrosoftSqlClientDiagnosticOptions _options;
         private readonly ConcurrentDictionary<object, ISpan> _spanStorage;
 
-        public MicrosoftSqlClientDiagnostics(ILoggerFactory loggerFactory, ITracer tracer, IOptions<MicrosoftSqlClientDiagnosticOptions> options,
-            IOptions<GenericEventOptions> genericEventOptions)
-           : base(loggerFactory, tracer, genericEventOptions.Value)
+        public MicrosoftSqlClientDiagnostics(ILoggerFactory loggerFactory, ITracer tracer, IOptions<MicrosoftSqlClientDiagnosticOptions> options)
+           : base(loggerFactory, tracer, options?.Value)
         {
             _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
             _spanStorage = new ConcurrentDictionary<object, ISpan>();
@@ -28,28 +29,51 @@ namespace OpenTracing.Contrib.NetCore.MicrosoftSqlClient
 
         protected override string GetListenerName() => DiagnosticListenerName;
 
-        protected override bool IsEnabled(string eventName)
+        /// <summary>
+        /// Both diagnostic listeners for System.Data.SqlClient and Microsoft.Data.SqlClient use the same listener name, 
+        /// so we need to make sure this observer gets the correct events.
+        /// </summary>
+        protected override bool IsSupportedEvent(string eventName) => eventName.StartsWith("Microsoft.");
+
+        protected override IEnumerable<string> HandledEventNames()
         {
-            return eventName.StartsWith("Microsoft.Data.SqlClient");
+            yield return MicrosoftSqlClientDiagnosticOptions.EventNames.WriteCommandBefore;
+            yield return MicrosoftSqlClientDiagnosticOptions.EventNames.WriteCommandError;
+            yield return MicrosoftSqlClientDiagnosticOptions.EventNames.WriteCommandAfter;
         }
 
-        protected override void OnNext(string eventName, object untypedArg)
+        protected override void HandleEvent(string eventName, object untypedArg)
         {
             switch (eventName)
             {
-                case "Microsoft.Data.SqlClient.WriteCommandBefore":
+                case MicrosoftSqlClientDiagnosticOptions.EventNames.WriteCommandBefore:
                     {
                         var cmd = (SqlCommand)_activityCommand_RequestFetcher.Fetch(untypedArg);
 
+                        var activeSpan = Tracer.ActiveSpan;
+
+                        if (activeSpan == null && !_options.StartRootSpans)
+                        {
+                            if (IsLogLevelTraceEnabled)
+                            {
+                                Logger.LogTrace("Ignoring SQL command due to missing parent span");
+                            }
+                            return;
+                        }
+
                         if (IgnoreEvent(cmd))
                         {
-                            Logger.LogDebug("Ignoring SQL command due to IgnorePatterns");
+                            if (IsLogLevelTraceEnabled)
+                            {
+                                Logger.LogTrace("Ignoring SQL command due to IgnorePatterns");
+                            } 
                             return;
                         }
 
                         string operationName = _options.OperationNameResolver(cmd);
 
                         var span = Tracer.BuildSpan(operationName)
+                            .AsChildOf(activeSpan)
                             .WithTag(Tags.SpanKind, Tags.SpanKindClient)
                             .WithTag(Tags.Component, _options.ComponentName)
                             .WithTag(Tags.DbInstance, cmd.Connection.Database)
@@ -60,7 +84,7 @@ namespace OpenTracing.Contrib.NetCore.MicrosoftSqlClient
                     }
                     break;
 
-                case "Microsoft.Data.SqlClient.WriteCommandError":
+                case MicrosoftSqlClientDiagnosticOptions.EventNames.WriteCommandError:
                     {
                         var cmd = (SqlCommand)_activityCommand_RequestFetcher.Fetch(untypedArg);
                         var ex = (Exception)_exception_ExceptionFetcher.Fetch(untypedArg);
@@ -73,7 +97,7 @@ namespace OpenTracing.Contrib.NetCore.MicrosoftSqlClient
                     }
                     break;
 
-                case "Microsoft.Data.SqlClient.WriteCommandAfter":
+                case MicrosoftSqlClientDiagnosticOptions.EventNames.WriteCommandAfter:
                     {
                         var cmd = (SqlCommand)_activityCommand_RequestFetcher.Fetch(untypedArg);
 
@@ -82,6 +106,10 @@ namespace OpenTracing.Contrib.NetCore.MicrosoftSqlClient
                             span.Finish();
                         }
                     }
+                    break;
+
+                default:
+                    HandleUnknownEvent(eventName, untypedArg);
                     break;
             }
         }

@@ -26,11 +26,6 @@ namespace OpenTracing.Contrib.NetCore.Internal
             IsLogLevelTraceEnabled = Logger.IsEnabled(LogLevel.Trace);
         }
 
-        public virtual bool IsSubscriberEnabled()
-        {
-            return true;
-        }
-
         public abstract IDisposable SubscribeIfMatch(DiagnosticListener diagnosticListener);
     }
 }

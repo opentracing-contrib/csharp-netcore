@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using OpenTracing.Contrib.NetCore.CoreFx;
+using OpenTracing.Contrib.NetCore.Configuration;
 using OpenTracing.Contrib.NetCore.Internal;
 using OpenTracing.Mock;
 using OpenTracing.Tag;
@@ -58,7 +58,7 @@ namespace OpenTracing.Contrib.NetCore.Tests.CoreFx
                 })
                 .AddOpenTracingCoreServices(builder =>
                 {
-                    builder.AddCoreFx();
+                    builder.AddHttpHandler();
                     builder.Services.AddSingleton<ITracer>(_tracer);
                     builder.Services.AddSingleton(Options.Create(_options));
                 })

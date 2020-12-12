@@ -1,12 +1,14 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
-using Shared;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using OpenTracing;
 using OrdersApi.DataStore;
+using Shared;
 
 namespace Samples.OrdersApi.Controllers
 {
@@ -22,6 +24,14 @@ namespace Samples.OrdersApi.Controllers
             _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
             _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
             _tracer = tracer ?? throw new ArgumentNullException(nameof(tracer));
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Index()
+        {
+            var orders = await _dbContext.Orders.ToListAsync();
+
+            return Ok(orders.Select(x => new { x.OrderId }).ToList());
         }
 
         [HttpPost]
