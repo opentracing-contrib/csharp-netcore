@@ -108,8 +108,20 @@ namespace OpenTracing.Contrib.NetCore.EntityFrameworkCore
                     break;
 
                 default:
-                    HandleUnknownEvent(eventName, untypedArg);
-                    break;
+                    {
+                        Dictionary<string, string> tags = null;
+                        if (untypedArg is EventData eventArgs)
+                        {
+                            tags = new Dictionary<string, string>
+                            {
+                                { "level", eventArgs.LogLevel.ToString() },
+                            };
+                        }
+
+                        HandleUnknownEvent(eventName, untypedArg, tags);
+                        break;
+                    }
+                    
             }
         }
 

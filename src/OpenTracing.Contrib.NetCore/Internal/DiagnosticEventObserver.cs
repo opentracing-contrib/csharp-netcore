@@ -87,9 +87,9 @@ namespace OpenTracing.Contrib.NetCore.Internal
 
         protected abstract void HandleEvent(string eventName, object untypedArg);
 
-        protected void HandleUnknownEvent(string eventName, object untypedArg)
+        protected void HandleUnknownEvent(string eventName, object untypedArg, IEnumerable<KeyValuePair<string, string>> tags = null)
         {
-            _genericEventProcessor?.ProcessEvent(eventName, untypedArg);
+            _genericEventProcessor?.ProcessEvent(eventName, untypedArg, tags);
         }
 
         protected void DisposeActiveScope(bool isScopeRequired, Exception exception = null)
