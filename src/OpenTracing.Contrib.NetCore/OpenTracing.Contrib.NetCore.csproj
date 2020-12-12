@@ -60,7 +60,7 @@ Instrumented components: HttpClient calls, ASP.NET Core, Entity Framework Core a
     <PackageReference Include="Microsoft.Data.SqlClient" Version="2.0.1" PrivateAssets="All" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="[5.0.1,6)" PrivateAssets="All" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="[5.0.1,6)" PrivateAssets="All" />
-    <PackageReference Include="System.Data.SqlClient" Version="4.8.2" />
+    <PackageReference Include="System.Data.SqlClient" Version="4.8.2" PrivateAssets="All" />
   </ItemGroup>
 
 </Project>

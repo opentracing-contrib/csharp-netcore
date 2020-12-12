@@ -8,7 +8,7 @@
     <PackageIconUrl>https://avatars0.githubusercontent.com/u/15482765</PackageIconUrl>
     <PackageProjectUrl>https://github.com/opentracing-contrib/csharp-netcore</PackageProjectUrl>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
-    <PackageReleaseNotes Condition="'$(Version)' != ''">https://github.com/opentracing-contrib/csharp-netcore/releases/tag/$(Version)</PackageReleaseNotes>
+    <PackageReleaseNotes Condition="'$(Version)' != ''">https://github.com/opentracing-contrib/csharp-netcore/releases/tag/v$(Version)</PackageReleaseNotes>
 
     <NoWarn>$(NoWarn);CS1591</NoWarn>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
