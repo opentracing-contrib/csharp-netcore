@@ -116,7 +116,9 @@ namespace OpenTracing.Contrib.NetCore.Tests.CoreFx
         [Fact]
         public async Task Span_has_correct_properties()
         {
-            await _httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Get, new Uri("http://www.example.com/api/values")));
+            var request = new HttpRequestMessage(HttpMethod.Get, new Uri("http://www.example.com/api/values"));
+            request.Headers.Add("action", "Test/v2/test");
+            await _httpClient.SendAsync(request);
 
             var finishedSpans = _tracer.FinishedSpans();
             Assert.Single(finishedSpans);
@@ -128,10 +130,11 @@ namespace OpenTracing.Contrib.NetCore.Tests.CoreFx
             Assert.Null(span.ParentId);
             Assert.Empty(span.References);
 
-            Assert.Equal(7, span.Tags.Count);
+            Assert.Equal(8, span.Tags.Count);
             Assert.Equal(Tags.SpanKindClient, span.Tags[Tags.SpanKind.Key]);
             Assert.Equal("HttpOut", span.Tags[Tags.Component.Key]);
             Assert.Equal("GET", span.Tags[Tags.HttpMethod.Key]);
+            Assert.Equal("Test/v2/test", span.Tags["http.action"]);
             Assert.Equal("http://www.example.com/api/values", span.Tags[Tags.HttpUrl.Key]);
             Assert.Equal("www.example.com", span.Tags[Tags.PeerHostname.Key]);
             Assert.Equal(80, span.Tags[Tags.PeerPort.Key]);

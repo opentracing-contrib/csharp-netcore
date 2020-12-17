@@ -99,6 +99,12 @@ namespace OpenTracing.Contrib.NetCore.HttpHandler
                             .WithTag(Tags.PeerPort, request.RequestUri.Port)
                             .Start();
 
+                        if (request.Headers.Contains("Action"))
+                        {
+                            var action = string.Join(';', request.Headers.GetValues("Action"));
+                            span.SetTag("http.action", action);
+                        }
+
                         _options.OnRequest?.Invoke(span, request);
 
                         if (_options.InjectEnabled?.Invoke(request) ?? true)
