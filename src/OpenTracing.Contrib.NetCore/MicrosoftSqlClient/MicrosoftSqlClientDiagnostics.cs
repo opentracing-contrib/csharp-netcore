@@ -25,7 +25,10 @@ namespace OpenTracing.Contrib.NetCore.MicrosoftSqlClient
         private readonly ConcurrentDictionary<Type, PropertyFetcher> _activityCommandFetchers;
         private readonly ConcurrentDictionary<Type, PropertyFetcher> _exceptionFetchers;
 
-        public MicrosoftSqlClientDiagnostics(ILoggerFactory loggerFactory, ITracer tracer, IOptions<MicrosoftSqlClientDiagnosticOptions> options)
+        public MicrosoftSqlClientDiagnostics(
+            ILoggerFactory loggerFactory,
+            ITracer tracer,
+            IOptions<MicrosoftSqlClientDiagnosticOptions> options)
             : base(loggerFactory, tracer, options?.Value)
         {
             _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
