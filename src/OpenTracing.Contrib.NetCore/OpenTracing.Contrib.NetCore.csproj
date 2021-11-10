@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netcoreapp2.1;netcoreapp3.1;net5.0</TargetFrameworks>
+    <TargetFrameworks>netcoreapp2.1;netcoreapp3.1;net5.0;net6.0</TargetFrameworks>
     <Description>Adds OpenTracing instrumentation for .NET Core apps that use the `Microsoft.Extensions.*` stack.
 Instrumented components: HttpClient calls, ASP.NET Core, Entity Framework Core and any other library that uses DiagnosticSource events.</Description>
     <PackageTags>opentracing;distributed-tracing;tracing;netcore</PackageTags>
@@ -60,7 +60,25 @@ Instrumented components: HttpClient calls, ASP.NET Core, Entity Framework Core a
     <PackageReference Include="Microsoft.Data.SqlClient" Version="2.0.1" PrivateAssets="All" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="[5.0.1,6)" PrivateAssets="All" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="[5.0.1,6)" PrivateAssets="All" />
-    <PackageReference Include="System.Data.SqlClient" Version="4.8.2" PrivateAssets="All" />
+    <PackageReference Include="System.Data.SqlClient" Version="4.8.3" PrivateAssets="All" />
+  </ItemGroup>
+
+  <ItemGroup Condition="$(TargetFramework)=='net6.0'">
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+   <ItemGroup Condition="$(TargetFramework)=='net6.0'">
+    <!-- Main dependencies -->
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="[6.0.0,7)" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="[6.0.0,7)" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="[6.0.0,7)" />
+    <PackageReference Include="Microsoft.Extensions.Options" Version="[6.0.0,7)" />
+    <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="6.0.0" />
+    <!-- Instrumented libraries (which are not visible as actual dependencies) -->
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="2.1.4" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="[6.0.0,7)" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="[6.0.0,7)" PrivateAssets="All" />
+    <PackageReference Include="System.Data.SqlClient" Version="4.8.3" PrivateAssets="All" />
   </ItemGroup>
 
 </Project>
