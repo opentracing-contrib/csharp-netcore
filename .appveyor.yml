@@ -16,7 +16,8 @@ build_script:
   - ps: .\dotnet-install.ps1 -Runtime dotnet -Version 2.0.7 # Required for building the netcoreapp2.1 FrontendWeb (Razor throws an error otherwise)
   - ps: .\dotnet-install.ps1 -Runtime dotnet -Version 2.1.23
   - ps: .\dotnet-install.ps1 -Runtime dotnet -Version 3.1.10
-  - ps: .\dotnet-install.ps1 -Version 5.0.101
+  - ps: .\dotnet-install.ps1 -Runtime dotnet -Version 5.0.12
+  - ps: .\dotnet-install.ps1 -Version 6.0.100
   - ps: .\build.ps1
 
 test: off

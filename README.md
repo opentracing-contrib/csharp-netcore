@@ -9,7 +9,7 @@ _**IMPORTANT:** OpenTracing and OpenCensus have merget to form **[OpenTelemetry]
 
 ## Supported .NET versions
 
-This project currently only supports apps targeting `netcoreapp2.1` (.NET Core 2.1), `netcoreapp3.1` (.NET Core 3.1) or net5.0 (.NET 5.0)!
+This project currently only supports apps targeting `netcoreapp2.1` (.NET Core 2.1), `netcoreapp3.1` (.NET Core 3.1), net5.0 (.NET 5.0), or .NET 6.0!
 
 This project DOES NOT support the full .NET framework as that uses different instrumentation code.
 
