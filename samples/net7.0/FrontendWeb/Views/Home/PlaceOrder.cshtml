@@ -1,0 +1,13 @@
+﻿@model Shared.PlaceOrderCommand
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>FrontendWeb</title>
+<h1>FrontendWeb</h1>
+<p>Place an order</p>
+
+<form asp-action="PlaceOrder" asp-antiforgery="true">
+    <div>Customer: @Html.DropDownListFor(x => x.CustomerId, (IEnumerable<SelectListItem>)ViewBag.Customers)</div>
+    <div>ItemNumber: @Html.TextBoxFor(x => x.ItemNumber)</div>
+    <div>Quantity: @Html.TextBoxFor(x => x.Quantity)</div>
+    <input type="submit" value="Place order"/>
+</form>

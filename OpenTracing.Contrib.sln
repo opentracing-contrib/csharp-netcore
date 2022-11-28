@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.30523.141
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.33103.201
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{420F640A-E23F-457C-BEC7-1DEAD1C592F1}"
 	ProjectSection(SolutionItems) = preProject
@@ -72,15 +72,27 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TrafficGenerator", "samples
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "net6.0", "net6.0", "{03935477-E35E-4EEE-9944-8742E0CB5CFD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CustomersApi", "samples\net6.0\CustomersApi\CustomersApi.csproj", "{872A3B2E-1A28-4B3C-A83D-7C99513B36FB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CustomersApi", "samples\net6.0\CustomersApi\CustomersApi.csproj", "{872A3B2E-1A28-4B3C-A83D-7C99513B36FB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FrontendWeb", "samples\net6.0\FrontendWeb\FrontendWeb.csproj", "{4756D99B-BAA2-4B9E-AAE3-F521C38134DD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FrontendWeb", "samples\net6.0\FrontendWeb\FrontendWeb.csproj", "{4756D99B-BAA2-4B9E-AAE3-F521C38134DD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OrdersApi", "samples\net6.0\OrdersApi\OrdersApi.csproj", "{73108F76-DAF0-48A1-9FE7-F17395672316}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OrdersApi", "samples\net6.0\OrdersApi\OrdersApi.csproj", "{73108F76-DAF0-48A1-9FE7-F17395672316}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shared", "samples\net6.0\Shared\Shared.csproj", "{85F652F4-BF5E-4CBF-BD1F-5BE305DC4589}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Shared", "samples\net6.0\Shared\Shared.csproj", "{85F652F4-BF5E-4CBF-BD1F-5BE305DC4589}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TrafficGenerator", "samples\net6.0\TrafficGenerator\TrafficGenerator.csproj", "{AE063835-3A23-4037-900D-9FFCC3234C8F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TrafficGenerator", "samples\net6.0\TrafficGenerator\TrafficGenerator.csproj", "{AE063835-3A23-4037-900D-9FFCC3234C8F}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "net7.0", "net7.0", "{6F197417-E1E4-4A9B-849C-68175E302125}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CustomersApi", "samples\net7.0\CustomersApi\CustomersApi.csproj", "{9DC3DF20-EAFC-4018-9A24-535A31431718}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TrafficGenerator", "samples\net7.0\TrafficGenerator\TrafficGenerator.csproj", "{5CC748BB-9A9D-458D-8644-3F08935B6465}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Shared", "samples\net7.0\Shared\Shared.csproj", "{60AFEFF2-A902-487C-A6B0-CF4B9B37CD80}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OrdersApi", "samples\net7.0\OrdersApi\OrdersApi.csproj", "{1523C72D-BA63-42AF-8FCD-FDBB4CD1017D}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FrontendWeb", "samples\net7.0\FrontendWeb\FrontendWeb.csproj", "{07CAA0AE-917D-468A-A366-D4DA2F653B79}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -180,6 +192,26 @@ Global
 		{AE063835-3A23-4037-900D-9FFCC3234C8F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AE063835-3A23-4037-900D-9FFCC3234C8F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AE063835-3A23-4037-900D-9FFCC3234C8F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9DC3DF20-EAFC-4018-9A24-535A31431718}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9DC3DF20-EAFC-4018-9A24-535A31431718}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9DC3DF20-EAFC-4018-9A24-535A31431718}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9DC3DF20-EAFC-4018-9A24-535A31431718}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5CC748BB-9A9D-458D-8644-3F08935B6465}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5CC748BB-9A9D-458D-8644-3F08935B6465}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5CC748BB-9A9D-458D-8644-3F08935B6465}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5CC748BB-9A9D-458D-8644-3F08935B6465}.Release|Any CPU.Build.0 = Release|Any CPU
+		{60AFEFF2-A902-487C-A6B0-CF4B9B37CD80}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{60AFEFF2-A902-487C-A6B0-CF4B9B37CD80}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{60AFEFF2-A902-487C-A6B0-CF4B9B37CD80}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{60AFEFF2-A902-487C-A6B0-CF4B9B37CD80}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1523C72D-BA63-42AF-8FCD-FDBB4CD1017D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1523C72D-BA63-42AF-8FCD-FDBB4CD1017D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1523C72D-BA63-42AF-8FCD-FDBB4CD1017D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1523C72D-BA63-42AF-8FCD-FDBB4CD1017D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{07CAA0AE-917D-468A-A366-D4DA2F653B79}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{07CAA0AE-917D-468A-A366-D4DA2F653B79}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{07CAA0AE-917D-468A-A366-D4DA2F653B79}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{07CAA0AE-917D-468A-A366-D4DA2F653B79}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -212,6 +244,12 @@ Global
 		{73108F76-DAF0-48A1-9FE7-F17395672316} = {03935477-E35E-4EEE-9944-8742E0CB5CFD}
 		{85F652F4-BF5E-4CBF-BD1F-5BE305DC4589} = {03935477-E35E-4EEE-9944-8742E0CB5CFD}
 		{AE063835-3A23-4037-900D-9FFCC3234C8F} = {03935477-E35E-4EEE-9944-8742E0CB5CFD}
+		{6F197417-E1E4-4A9B-849C-68175E302125} = {36333C22-54F7-403C-ABC4-BECE4EE3F52D}
+		{9DC3DF20-EAFC-4018-9A24-535A31431718} = {6F197417-E1E4-4A9B-849C-68175E302125}
+		{5CC748BB-9A9D-458D-8644-3F08935B6465} = {6F197417-E1E4-4A9B-849C-68175E302125}
+		{60AFEFF2-A902-487C-A6B0-CF4B9B37CD80} = {6F197417-E1E4-4A9B-849C-68175E302125}
+		{1523C72D-BA63-42AF-8FCD-FDBB4CD1017D} = {6F197417-E1E4-4A9B-849C-68175E302125}
+		{07CAA0AE-917D-468A-A366-D4DA2F653B79} = {6F197417-E1E4-4A9B-849C-68175E302125}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {832F86C2-4B74-4259-8073-04EE0C37FBCD}
