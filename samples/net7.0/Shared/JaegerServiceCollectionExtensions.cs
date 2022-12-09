@@ -1,5 +1,4 @@
-﻿using System;
-using System.Reflection;
+﻿using System.Reflection;
 using Jaeger;
 using Jaeger.Reporters;
 using Jaeger.Samplers;
@@ -9,47 +8,46 @@ using OpenTracing;
 using OpenTracing.Contrib.NetCore.Configuration;
 using OpenTracing.Util;
 
-namespace Microsoft.Extensions.DependencyInjection
+namespace Microsoft.Extensions.DependencyInjection;
+
+public static class JaegerServiceCollectionExtensions
 {
-    public static class JaegerServiceCollectionExtensions
+    private static readonly Uri _jaegerUri = new Uri("http://localhost:14268/api/traces");
+
+    public static IServiceCollection AddJaeger(this IServiceCollection services)
     {
-        private static readonly Uri _jaegerUri = new Uri("http://localhost:14268/api/traces");
+        if (services == null)
+            throw new ArgumentNullException(nameof(services));
 
-        public static IServiceCollection AddJaeger(this IServiceCollection services)
+        services.AddSingleton<ITracer>(serviceProvider =>
         {
-            if (services == null)
-                throw new ArgumentNullException(nameof(services));
+            string serviceName = Assembly.GetEntryAssembly()?.GetName().Name ?? "unknown-service";
 
-            services.AddSingleton<ITracer>(serviceProvider =>
-            {
-                string serviceName = Assembly.GetEntryAssembly().GetName().Name;
+            ILoggerFactory loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
 
-                ILoggerFactory loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
+            ISampler sampler = new ConstSampler(sample: true);
 
-                ISampler sampler = new ConstSampler(sample: true);
+            IReporter reporter = new RemoteReporter.Builder()
+                .WithSender(new HttpSender.Builder(_jaegerUri.ToString()).Build())
+                .Build();
 
-                IReporter reporter = new RemoteReporter.Builder()
-                    .WithSender(new HttpSender.Builder(_jaegerUri.ToString()).Build())
-                    .Build();
+            ITracer tracer = new Tracer.Builder(serviceName)
+                .WithLoggerFactory(loggerFactory)
+                .WithSampler(sampler)
+                .WithReporter(reporter)
+                .Build();
 
-                ITracer tracer = new Tracer.Builder(serviceName)
-                    .WithLoggerFactory(loggerFactory)
-                    .WithSampler(sampler)
-                    .WithReporter(reporter)
-                    .Build();
+            GlobalTracer.Register(tracer);
 
-                GlobalTracer.Register(tracer);
+            return tracer;
+        });
 
-                return tracer;
-            });
+        // Prevent endless loops when OpenTracing is tracking HTTP requests to Jaeger.
+        services.Configure<HttpHandlerDiagnosticOptions>(options =>
+        {
+            options.IgnorePatterns.Add(request => request.RequestUri != null && _jaegerUri.IsBaseOf(request.RequestUri));
+        });
 
-            // Prevent endless loops when OpenTracing is tracking HTTP requests to Jaeger.
-            services.Configure<HttpHandlerDiagnosticOptions>(options =>
-            {
-                options.IgnorePatterns.Add(request => _jaegerUri.IsBaseOf(request.RequestUri));
-            });
-
-            return services;
-        }
+        return services;
     }
 }

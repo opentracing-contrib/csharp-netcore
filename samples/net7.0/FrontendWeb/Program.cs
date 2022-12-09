@@ -1,34 +1,28 @@
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Shared;
 
-namespace Samples.FrontendWeb
-{
-    public class Program
-    {
-        public static void Main(string[] args)
-        {
-            CreateHostBuilder(args).Build().Run();
-        }
 
-        public static IHostBuilder CreateHostBuilder(string[] args)
-        {
-            return Host.CreateDefaultBuilder(args)
-                .ConfigureWebHostDefaults(webBuilder =>
-                {
-                    webBuilder
-                        .UseStartup<Startup>()
-                        .UseUrls(Constants.FrontendUrl);
-                })
-                .ConfigureServices(services =>
-                {
-                    // Registers and starts Jaeger (see Shared.JaegerServiceCollectionExtensions)
-                    services.AddJaeger();
+var builder = WebApplication.CreateBuilder(args);
 
-                    // Enables OpenTracing instrumentation for ASP.NET Core, CoreFx, EF Core
-                    services.AddOpenTracing();
-                });
-        }
-    }
-}
+// Add services to the container.
+
+builder.WebHost.UseUrls(Constants.FrontendUrl);
+
+// Registers and starts Jaeger (see Shared.JaegerServiceCollectionExtensions)
+builder.Services.AddJaeger();
+
+// Enables OpenTracing instrumentation for ASP.NET Core, CoreFx, EF Core
+builder.Services.AddOpenTracing();
+
+builder.Services.AddSingleton<HttpClient>();
+
+builder.Services.AddMvc();
+
+
+var app = builder.Build();
+
+
+// Configure the HTTP request pipeline.
+
+app.MapDefaultControllerRoute();
+
+app.Run();

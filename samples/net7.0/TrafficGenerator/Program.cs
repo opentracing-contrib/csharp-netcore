@@ -1,25 +1,15 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
+﻿using TrafficGenerator;
 
-namespace TrafficGenerator
-{
-    class Program
+using var host = Host.CreateDefaultBuilder(args)
+    .ConfigureServices((hostContext, services) =>
     {
-        public static void Main(string[] args)
-        {
-            CreateHostBuilder(args).Build().Run();
-        }
+        // Registers and starts Jaeger (see Shared.JaegerServiceCollectionExtensions)
+        services.AddJaeger();
 
-        public static IHostBuilder CreateHostBuilder(string[] args) =>
-            Host.CreateDefaultBuilder(args)
-                .ConfigureServices(services =>
-                {
-                    // Registers and starts Jaeger (see Shared.JaegerServiceCollectionExtensions)
-                    services.AddJaeger();
+        services.AddOpenTracing();
 
-                    services.AddOpenTracing();
+        services.AddHostedService<Worker>();
+    })
+    .Build();
 
-                    services.AddHostedService<Worker>();
-                });
-    }
-}
+await host.RunAsync();

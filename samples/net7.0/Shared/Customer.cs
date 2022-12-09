@@ -1,18 +1,19 @@
-﻿namespace Shared
+﻿namespace Shared;
+
+public class Customer
 {
-    public class Customer
+    public int CustomerId { get; set; }
+    public string Name { get; set; }
+
+    public Customer()
     {
-        public int CustomerId { get; set; }
-        public string Name { get; set; }
+        CustomerId = 0;
+        Name = string.Empty;
+    }
 
-        public Customer()
-        {
-        }
-
-        public Customer(int customerId, string name)
-        {
-            CustomerId = customerId;
-            Name = name;
-        }
+    public Customer(int customerId, string name)
+    {
+        CustomerId = customerId;
+        Name = name;
     }
 }
