@@ -18,6 +18,7 @@ build_script:
   - ps: .\dotnet-install.ps1 -Runtime dotnet -Version 3.1.10
   - ps: .\dotnet-install.ps1 -Runtime dotnet -Version 5.0.12
   - ps: .\dotnet-install.ps1 -Version 6.0.100
+  - ps: .\dotnet-install.ps1 -Version 7.0.100
   - ps: .\build.ps1
 
 test: off
