@@ -1,3 +1,5 @@
+#pragma warning disable CA2017
+
 using System;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;

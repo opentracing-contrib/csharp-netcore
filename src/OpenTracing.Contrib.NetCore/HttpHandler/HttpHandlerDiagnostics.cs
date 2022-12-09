@@ -175,7 +175,7 @@ namespace OpenTracing.Contrib.NetCore.HttpHandler
         {
             IDictionary<string, object> requestOptions;
 
-#if NETCOREAPP2_1 || NETCOREAPP3_1
+#if NETCOREAPP3_1
             requestOptions = request.Properties;
 #else 
             requestOptions = request.Options;

@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using OpenTracing.Contrib.NetCore.Internal;
+﻿using OpenTracing.Contrib.NetCore.Internal;
 using Xunit;
 
 namespace OpenTracing.Contrib.NetCore.Tests.Internal
