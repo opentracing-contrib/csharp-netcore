@@ -1,6 +1,6 @@
 [CmdletBinding(PositionalBinding = $false)]
 param(
-    [ValidateSet("net7.0", "net6.0", "netcoreapp3.1")]
+    [ValidateSet("net8.0", "net7.0", "net6.0", "netcoreapp3.1")]
     [string] $Framework = "net6.0"
 )
 
