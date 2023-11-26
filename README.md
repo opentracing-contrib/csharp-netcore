@@ -9,7 +9,7 @@ _**IMPORTANT:** OpenTracing and OpenCensus have merget to form **[OpenTelemetry]
 
 ## Supported .NET versions
 
-This project currently only supports apps targeting .NET Core 3.1, .NET 6.0, or .NET 7.0!
+This project currently only supports apps targeting .NET Core 3.1, .NET 6.0, .NET 7.0, or .NET 8.0!
 
 This project DOES NOT support the full .NET framework as that uses different instrumentation code.
 

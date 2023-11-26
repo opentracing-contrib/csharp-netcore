@@ -142,6 +142,7 @@ namespace OpenTracing.Contrib.NetCore.Tests.AspNetCore
             var client = CreateClient();
 
             await client.GetAsync("/not-found");
+            await Task.Delay(50);
 
             var finishedSpans = _tracer.FinishedSpans();
             Assert.Single(finishedSpans);
