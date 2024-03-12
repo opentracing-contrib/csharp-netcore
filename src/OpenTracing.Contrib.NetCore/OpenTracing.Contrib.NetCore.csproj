@@ -8,20 +8,11 @@ Instrumented components: HttpClient calls, ASP.NET Core, Entity Framework Core a
   </PropertyGroup>
 
   <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="OpenTracing" Version="0.12.1" />
   </ItemGroup>
 
   <ItemGroup Condition="$(TargetFramework)=='netcoreapp3.1'">
-    <FrameworkReference Include="Microsoft.AspNetCore.App" />
-  </ItemGroup>
-
-  <ItemGroup Condition="$(TargetFramework)=='netcoreapp3.1'">
-    <!-- Main dependencies -->
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="[3.1.8,4)" />
-    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="[3.1.8,4)" />
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="[3.1.8,4)" />
-    <PackageReference Include="Microsoft.Extensions.Options" Version="[3.1.8,4)" />
-    <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="4.7.1" />
     <!-- Instrumented libraries (which are not visible as actual dependencies) -->
     <PackageReference Include="Microsoft.Data.SqlClient" Version="1.1.4" PrivateAssets="All" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="[3.1.8,4)" PrivateAssets="All" />
@@ -29,17 +20,7 @@ Instrumented components: HttpClient calls, ASP.NET Core, Entity Framework Core a
     <PackageReference Include="System.Data.SqlClient" Version="4.8.5" PrivateAssets="All" />
   </ItemGroup>
 
-  <ItemGroup Condition="$(TargetFramework)=='net6.0'">
-    <FrameworkReference Include="Microsoft.AspNetCore.App" />
-  </ItemGroup>
-
-   <ItemGroup Condition="$(TargetFramework)=='net6.0'">
-    <!-- Main dependencies -->
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="[6.0.0,7)" />
-    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="[6.0.0,7)" />
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="[6.0.0,7)" />
-    <PackageReference Include="Microsoft.Extensions.Options" Version="[6.0.0,7)" />
-    <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="6.0.0" />
+   <ItemGroup Condition="$(TargetFramework)=='net6.0'">    
     <!-- Instrumented libraries (which are not visible as actual dependencies) -->
     <PackageReference Include="Microsoft.Data.SqlClient" Version="2.1.4" PrivateAssets="All" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="[6.0.0,7)" PrivateAssets="All" />
@@ -47,17 +28,7 @@ Instrumented components: HttpClient calls, ASP.NET Core, Entity Framework Core a
     <PackageReference Include="System.Data.SqlClient" Version="4.8.5" PrivateAssets="All" />
   </ItemGroup>
 
-  <ItemGroup Condition="$(TargetFramework)=='net7.0'">
-    <FrameworkReference Include="Microsoft.AspNetCore.App" />
-  </ItemGroup>
-
    <ItemGroup Condition="$(TargetFramework)=='net7.0'">
-    <!-- Main dependencies -->
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="[7.0.0,8)" />
-    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="[7.0.0,8)" />
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="[7.0.0,8)" />
-    <PackageReference Include="Microsoft.Extensions.Options" Version="[7.0.0,8)" />
-    <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="7.0.0" />
     <!-- Instrumented libraries (which are not visible as actual dependencies) -->
     <PackageReference Include="Microsoft.Data.SqlClient" Version="5.0.1" PrivateAssets="All" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="[7.0.0,8)" PrivateAssets="All" />
